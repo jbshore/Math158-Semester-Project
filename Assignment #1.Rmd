@@ -13,6 +13,30 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(readr)
 kc_house_data <- read_csv("~/Downloads/kc_house_data.csv")
+housing <- kc_house_data
 View(kc_house_data)
+
+require(ggplot2)
+require(dplyr)
+```
+
+This dataset describes housing in King County, WA (Seattle area). It includes homes sold between May 2014 and May 2015, for a total of 21,000 observations. It was originally assembled by user "harlfoxem" on kaggle.
+
+Each row in the dataset is a particular house, described by 19 variables including numeric variables such number of bedrooms, number of bathrooms, and square footage of the lot and house itself, as well as categorical variables such as condition, grade, zipcode, and year, and a few binary variables such as waterfront and view.
+
+```{r}
+mean(housing$price)
+median(housing$price)
+
+ggplot(housing)+geom_point(aes(x = sqft_living, y = price, col = waterfront))
+
+ggplot(housing)+geom_point(aes(x = long, y = lat))
+
+ggplot(housing)+geom_point(aes(x = long, y = price))
+
+ggplot(housing)+geom_point(aes(x = yr_built, y = price))
+
+ggplot(housing)+geom_bar(aes(grade))
+ggplot(housing)+geom_bar(aes(condition))
 ```
 
