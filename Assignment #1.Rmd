@@ -5,6 +5,9 @@ date: "February 5, 2018"
 output: html_document
 ---
 
+Name of the GitHub repository: jbshore/Math158-Semester-Project
+Location of the GitHub repository: https://github.com/jbshore/Math158-Semester-Project
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -23,6 +26,32 @@ require(dplyr)
 This dataset describes housing in King County, WA (Seattle area). It includes homes sold between May 2014 and May 2015, for a total of 21,000 observations. It was originally assembled by user "harlfoxem" on kaggle.
 
 Each row in the dataset is a particular house, described by 19 variables including numeric variables such number of bedrooms, number of bathrooms, and square footage of the lot and house itself, as well as categorical variables such as condition, grade, zipcode, and year, and a few binary variables such as waterfront and view.
+
+The variables include price, the number of bedrooms/bathrooms, the size of the house/parking lot/basement, the number of floors, whether waterfront or not, overall condition/grade, built year, renovation year, zip code and latitude/longitude coordinate.  
+
+Appropriate summary statistics
+1. Mean price:
+2. Median price:
+3. Average size of the house:
+4. overall grade:
+5. the number of floors: 
+
+
+If we are looking at the relationship between the price of the house and other variables such as the average size and overall condition/grade, 
+
+
+
+
+Graphic displays:
+
+
+
+
+Things of interest: 
+Expected:
+
+
+Surprise: 
 
 ```{r}
 mean(housing$price)
