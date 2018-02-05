@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 kc_house_data <- read_csv("~/Downloads/kc_house_data.csv")
 housing <- kc_house_data
-View(kc_house_data)
+#View(kc_house_data)
 
 require(ggplot2)
 require(dplyr)
@@ -25,26 +25,34 @@ require(dplyr)
 
 This dataset describes housing in King County, WA (Seattle area). It includes homes sold between May 2014 and May 2015, for a total of 21,000 observations. It was originally assembled by user "harlfoxem" on kaggle.
 
-Each row in the dataset is a particular house, described by 19 variables including numeric variables such number of bedrooms, number of bathrooms, and square footage of the lot and house itself, as well as categorical variables such as condition, grade, zipcode, and year, and a few binary variables such as waterfront and view.
+21,000 houses, while surely not the entirety of property sales in Seattle, is a very large sample. The plot of latitude/longitude below indicates that the sample is spread relatively uniformly across the county as well, so this should be a dataset that well-represents the actual population (of house sales).
+
+Each row in the dataset is a particular house, described by 19 variables including numeric variables such number of bedrooms, number of bathrooms, and square footage of the lot and house itself, as well as categorical variables such as condition, grade, zipcode, and year, and a binary variable, waterfront.
 
 The variables include price, the number of bedrooms/bathrooms, the size of the house/parking lot/basement, the number of floors, whether waterfront or not, overall condition/grade, built year, renovation year, zip code and latitude/longitude coordinate.  
 
 Appropriate summary statistics
-1. Mean price: $540088
+1. Mean price: $540088 
+Standard deviation: $367127.1
+Waterfront mean price: $1661876 on 163 observations
 
-2. Median price: $450000
+This is very indicative of the Seattle market, which is one of the priciest in the country. Also note the high standard deviation, suggesting a wide range of available houses.
 
-3. Average size of the house/Living room area: The average square footage of the house is 2080. There is a positive relationship between the price and the living room area. The bigger the living room, the more expensive the house is, which makes sense. 
+2. Median price: $450000. The median below the mean suggests that the data is skewed to the right, and there are outliers in the higher price ranges (makes sense). The first plot below confirms this, and shows that housing prices are sort of bell-shaped with a very heavy positive tail.
 
-4. Overall grade: grade 7 is the most common, followed by grade 6.
+3. Average size of the house/Living room area: The average square footage of the house is 2080. There is a positive relationship between the price and the living room area. The bigger the living space, the more expensive the house is, which makes sense. 
 
-5. Overall condition: condition 3 is the most common, followed by condition 4. 
+4. Overall grade: grade 7 is the most common, followed by grade 6. Seems to be relatively bell-shaped (good job appraisers!). Grade seems to have a pretty strong effect on pricing, but a high grade does not guarantee a high price.
 
-6. Latitude/longitude coordinate: The majority of the houses are located in the range of 122.40 - 122 (longitude), 47.3 -47.8(latitude). And it seems like the most expensive houses are located around longitude 122.25. 
+5. Overall condition: condition 3 is the most common, followed by condition 4. Again, relatively bell-shaped.
+
+6. Latitude/longitude coordinate: The majority of the houses are located in the range of 122.40 - 122 (longitude), 47.3 -47.8(latitude). And it seems like the most expensive houses are located around longitude 122.25. The lat-long plot shows most houses are in the city, but Vashon Island and some other rural areas of the east-sound are also included.
 
 7. Year built: Generally, the more recent that the house is built, the more expensive it is, which also makes sense. 
 
-8. Waterfront: Given two houses have the same size, the waterfront one is most likely more expensive than the one that is not waterfront. 
+8. Waterfront: Given two houses of the same size, the waterfront one is most likely more expensive than the one that is not waterfront.
+
+9. View: Like waterfront, a better view translates to more expensive property most of the time. We wouldn't be surprised if view was correlated with waterfront, and possibly some other variables though. It is also unclear how this was measured.
 
 
 If we are looking at the relationship between the price of the house and other variables such as the average size and overall condition/grade, 
@@ -59,27 +67,53 @@ Graphic displays:
 
 Things of interest: 
 
-Overall, the data are what we expected. 
+Overall, the data are what we expected. Price of a house is generally affected by variables such as waterfront, square footage, and location. Honestly, we were a bit surprised by how strong and straightforward some of these relationships are (especially square footage). 
+
+Some interesting caveats: 
+
+1. Pricing is generally not affected by number of bedrooms, suggesting maybe the more expensive houses are still geared towards smaller families/retirees, rather than enormous families.
+
+2. Square footage of lot and living seem to be rather uncorrelated --- a larger lot does not correspond to a larger house. 
 
 Sampling:
 
 
-Surprise: 
-
 ```{r}
 mean(housing$price)
+sd(housing$price)
+waterfront <- subset(housing, housing$waterfront == 1)
+mean(waterfront$price)
 median(housing$price)
 mean(housing$sqft_living)
 
-ggplot(housing)+geom_point(aes(x = sqft_living, y = price, col = waterfront))
+housing.1 <- subset(housing, housing$bedrooms < 15)
+zips <- housing %>% group_by(zipcode) %>% arrange(desc(price)) %>% select(zipcode, price)
 
+
+plot(density(housing$price), main = "Dist. of Housing Prices", xlab = "price")
+# housing price distribution
+ggplot(housing)+geom_point(aes(x = sqft_living, y = price, col = as.factor(waterfront)))
+# house size vs price, with waterfront highlighted
+ggplot(housing)+geom_point(aes(x = sqft_living, y = price, col = as.factor(view)))
+# house size vs price, with view highlighted
 ggplot(housing)+geom_point(aes(x = long, y = lat))
-
+# map of houses roughly corresponds to shape of King County. Seattle is visible between lat 47.4-47.6 and long -122.35-122.25
 ggplot(housing)+geom_point(aes(x = long, y = price))
-
+# longitude vs price
 ggplot(housing)+geom_point(aes(x = yr_built, y = price))
-
+# year built vs. price
 ggplot(housing)+geom_bar(aes(grade))
+# dist. of grades
+ggplot(housing)+geom_point(aes(grade,price))
+# grade vs. price
 ggplot(housing)+geom_bar(aes(condition))
+# dist. of conditions
+ggplot(housing.1)+geom_point(aes(bedrooms,price))
+# number of bedrooms vs price
+ggplot(housing)+geom_point(aes(sqft_lot, sqft_living))
+# house size vs lot size
+
+zips[1:10,]
+# most expensive zipcodes
 ```
 
