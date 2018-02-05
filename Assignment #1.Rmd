@@ -1,0 +1,18 @@
+---
+title: 'Assignment #1'
+author: "Jacob Shore & Derek Huang"
+date: "February 5, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(readr)
+kc_house_data <- read_csv("~/Downloads/kc_house_data.csv")
+View(kc_house_data)
+```
+
