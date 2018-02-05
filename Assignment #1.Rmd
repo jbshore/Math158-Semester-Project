@@ -30,11 +30,21 @@ Each row in the dataset is a particular house, described by 19 variables includi
 The variables include price, the number of bedrooms/bathrooms, the size of the house/parking lot/basement, the number of floors, whether waterfront or not, overall condition/grade, built year, renovation year, zip code and latitude/longitude coordinate.  
 
 Appropriate summary statistics
-1. Mean price:
-2. Median price:
-3. Average size of the house:
-4. overall grade:
-5. the number of floors: 
+1. Mean price: $540088
+
+2. Median price: $450000
+
+3. Average size of the house/Living room area: The average square footage of the house is 2080. There is a positive relationship between the price and the living room area. The bigger the living room, the more expensive the house is, which makes sense. 
+
+4. Overall grade: grade 7 is the most common, followed by grade 6.
+
+5. Overall condition: condition 3 is the most common, followed by condition 4. 
+
+6. Latitude/longitude coordinate: The majority of the houses are located in the range of 122.40 - 122 (longitude), 47.3 -47.8(latitude). And it seems like the most expensive houses are located around longitude 122.25. 
+
+7. Year built: Generally, the more recent that the house is built, the more expensive it is, which also makes sense. 
+
+8. Waterfront: Given two houses have the same size, the waterfront one is most likely more expensive than the one that is not waterfront. 
 
 
 If we are looking at the relationship between the price of the house and other variables such as the average size and overall condition/grade, 
@@ -48,7 +58,10 @@ Graphic displays:
 
 
 Things of interest: 
-Expected:
+
+Overall, the data are what we expected. 
+
+Sampling:
 
 
 Surprise: 
@@ -56,6 +69,7 @@ Surprise:
 ```{r}
 mean(housing$price)
 median(housing$price)
+mean(housing$sqft_living)
 
 ggplot(housing)+geom_point(aes(x = sqft_living, y = price, col = waterfront))
 
