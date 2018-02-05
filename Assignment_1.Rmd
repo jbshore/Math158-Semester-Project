@@ -2,7 +2,9 @@
 title: 'Assignment #1'
 author: "Jacob Shore & Derek Huang"
 date: "February 5, 2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 Name of the GitHub repository: jbshore/Math158-Semester-Project
