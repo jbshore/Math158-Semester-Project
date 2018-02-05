@@ -11,18 +11,18 @@ Name of the GitHub repository: jbshore/Math158-Semester-Project
 Location of the GitHub repository: https://github.com/jbshore/Math158-Semester-Project
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width = 4, fig.height = 3, echo = TRUE)
 ```
 
 
-```{r}
+```{r, include=FALSE}
 library(readr)
 kc_house_data <- read_csv("~/Downloads/kc_house_data.csv")
 housing <- kc_house_data
 #View(kc_house_data)
 
-require(ggplot2)
-require(dplyr)
+library(ggplot2)
+library(dplyr)
 ```
 
 This dataset describes housing in King County, WA (Seattle area). It includes homes sold between May 2014 and May 2015, for a total of 21,000 observations. It was originally assembled by user "harlfoxem" on kaggle.
@@ -33,11 +33,11 @@ Each row in the dataset is a particular house, described by 19 variables includi
 
 The variables include price, the number of bedrooms/bathrooms, the size of the house/parking lot/basement, the number of floors, whether waterfront or not, overall condition/grade, built year, renovation year, zip code and latitude/longitude coordinate.  
 
-Appropriate summary statistics
+Appropriate summary statistics:
+
 1. Mean price: $540088 
 Standard deviation: $367127.1
 Waterfront mean price: $1661876 on 163 observations
-
 This is very indicative of the Seattle market, which is one of the priciest in the country. Also note the high standard deviation, suggesting a wide range of available houses.
 
 2. Median price: $450000. The median below the mean suggests that the data is skewed to the right, and there are outliers in the higher price ranges (makes sense). The first plot below confirms this, and shows that housing prices are sort of bell-shaped with a very heavy positive tail.
@@ -56,17 +56,6 @@ This is very indicative of the Seattle market, which is one of the priciest in t
 
 9. View: Like waterfront, a better view translates to more expensive property most of the time. We wouldn't be surprised if view was correlated with waterfront, and possibly some other variables though. It is also unclear how this was measured.
 
-
-If we are looking at the relationship between the price of the house and other variables such as the average size and overall condition/grade, 
-
-
-
-
-Graphic displays:
-
-
-
-
 Things of interest: 
 
 Overall, the data are what we expected. Price of a house is generally affected by variables such as waterfront, square footage, and location. Honestly, we were a bit surprised by how strong and straightforward some of these relationships are (especially square footage). 
@@ -77,8 +66,7 @@ Some interesting caveats:
 
 2. Square footage of lot and living seem to be rather uncorrelated --- a larger lot does not correspond to a larger house. 
 
-Sampling:
-
+Note that many of the plots created below have been supressed, with the most interesting ones shown.
 
 ```{r}
 mean(housing$price)
@@ -91,7 +79,6 @@ mean(housing$sqft_living)
 housing.1 <- subset(housing, housing$bedrooms < 15)
 zips <- housing %>% group_by(zipcode) %>% arrange(desc(price)) %>% select(zipcode, price)
 
-
 plot(density(housing$price), main = "Dist. of Housing Prices", xlab = "price")
 # housing price distribution
 ggplot(housing)+geom_point(aes(x = sqft_living, y = price, col = as.factor(waterfront)))
@@ -100,19 +87,19 @@ ggplot(housing)+geom_point(aes(x = sqft_living, y = price, col = as.factor(view)
 # house size vs price, with view highlighted
 ggplot(housing)+geom_point(aes(x = long, y = lat))
 # map of houses roughly corresponds to shape of King County. Seattle is visible between lat 47.4-47.6 and long -122.35-122.25
-ggplot(housing)+geom_point(aes(x = long, y = price))
+#ggplot(housing)+geom_point(aes(x = long, y = price))
 # longitude vs price
-ggplot(housing)+geom_point(aes(x = yr_built, y = price))
+#ggplot(housing)+geom_point(aes(x = yr_built, y = price))
 # year built vs. price
-ggplot(housing)+geom_bar(aes(grade))
+#ggplot(housing)+geom_bar(aes(grade))
 # dist. of grades
-ggplot(housing)+geom_point(aes(grade,price))
+#ggplot(housing)+geom_point(aes(grade,price))
 # grade vs. price
-ggplot(housing)+geom_bar(aes(condition))
+#ggplot(housing)+geom_bar(aes(condition))
 # dist. of conditions
-ggplot(housing.1)+geom_point(aes(bedrooms,price))
+#ggplot(housing.1)+geom_point(aes(bedrooms,price))
 # number of bedrooms vs price
-ggplot(housing)+geom_point(aes(sqft_lot, sqft_living))
+#ggplot(housing)+geom_point(aes(sqft_lot, sqft_living))
 # house size vs lot size
 
 zips[1:10,]
