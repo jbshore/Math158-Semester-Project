@@ -2,49 +2,56 @@
 title: "Assignment 2"
 author: "Jacob Shore & Derek Huang"
 date: "February 12, 2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width = 3.5, fig.height = 3.5, echo = TRUE)
 library(dplyr)
 library(ggplot2)
 library(infer)
 library(skimr)
 library(broom)
 library(readr)
-options(digits=10)
+options(digits=5)
+
+library(readr)
+kc_house_data <- read_csv("~/Downloads/kc_house_data.csv")
+housing <- kc_house_data
 ```
 
 # Introduction:
 We are interested in examining the relationship between square footage of living space of a house and that corresponding lot's price for properties sold in 2015 in King County, WA (mostly Seattle). Specifically, we are curious if square footage of living space is a good predictor of price for these houses. Our original dataset consisted of 21,613 observations (property sales), but we have randomly selected 1,000 of these observations to be included in the following models, as this should not compromise the relationships between the variables and is less taxing on our computers.
 
 # Analysis
-
-```{r}
+```{r, echo=FALSE}
 set.seed(12897312)
 housing2 <- housing[sample(nrow(housing), 1000),]
-ggplot(housing2)+geom_point(aes(x = sqft_living, y = price)) + labs(xlab = 'sq. ft. living space', ylab = "Price", title = "Standard model for price vs. sq. ft. living space")
+ggplot(housing2)+geom_point(aes(x = sqft_living, y = price)) + labs(x = 'sq. ft. living space', y = "Price", title = "Price vs. sq. ft. living space scatterplot") + theme(plot.title = element_text(size=10))
 # price vs. sqft living
 housing_lm <- lm(price ~ sqft_living, data=housing2)
 # untransformed model
 augment(housing_lm) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
-geom_hline(yintercept = 0) + labs(xlab = "Fitted", ylab = "Std. Resid.", title = "Standardized Residual Plot")
+geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot")
 # untransformed std. resid. plot
+```
 
+```{r, echo=FALSE}
 housing_lm3 <- lm(log(price) ~ log(sqft_living), data=housing2)
 # transforming both X and Y using log (power model)
 housing2 %>%
 ggplot(aes(x=log(sqft_living), y=log(price))) +
 geom_point() +
-geom_smooth(method="lm", se=FALSE) + labs(xlab = 'Log(sq. ft. living space)', ylab = "Log(price)", title = "Power model for price vs. sq.ft. living space")
+geom_smooth(method="lm", se=FALSE) + labs(x = 'Log(sq. ft. living space)', y = "Log(price)", title = "Power model for price vs. sq.ft. living space") + theme(plot.title = element_text(size=10))
 # transformed data plot
 augment(housing_lm3) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
-geom_hline(yintercept = 0) + labs(xlab = "Fitted", ylab = "Std. Resid.", title = "Standardized Residual Plot")
+geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot")
 # power model residual
 ```
 While the pre-transformed data is certainly linear in nature, it does not have constant variability. In fact, the data is severely heteroskedastic, as errors increase along with the predictor variable (sqft_living). We first tried a logarithmic transformation on the predictor, and while the variance was more stable, residual analysis made it clear that this transformation was introducting unintended curvilinearity into our model. We then tried a power model, tranforming both the predictor and response logarithmically. This model seems to address our concerns, as the data is still linear but now is shown to have constant variance as well. 
@@ -94,30 +101,32 @@ ggplot(housing_pred, aes(x = exp(log.sqft_living.), y = exp(log.price.))) + geom
 stat_smooth(method = "lm", se = FALSE) +
 geom_ribbon(aes(ymin = exp(lower_PI), ymax = exp(upper_PI)), alpha = .2, linetype = 'solid', col = 'black') +
 geom_ribbon(aes(ymin = exp(lower_PI_Bonf), ymax = exp(upper_PI_Bonf)), alpha = .2, col = 'black', linetype = 'dashed') +
-geom_ribbon(aes(ymin = exp(lower_PI_WH), ymax = exp(upper_PI_WH)), alpha = .2, col = 'black', linetype = 'dotted')+labs(xlab = "Square Footage of Living Space", ylab = "Price", title = "Back transformed, WH band dotted, Bonf. dashed, normal solid")
+geom_ribbon(aes(ymin = exp(lower_PI_WH), ymax = exp(upper_PI_WH)), alpha = .2, col = 'black', linetype = 'dotted')+labs(x = "Square Footage of Living Space", y = "Price", title = "Back transformed PI, WH band dotted, Bonf. dashed, unadj. solid") + theme(plot.title = element_text(size=6))
 
 ggplot(housing_pred, aes(x = (log.sqft_living.), y = (log.price.))) + geom_point(alpha = .5, col = 'black') +
 stat_smooth(method = "lm", se = FALSE) +
 geom_ribbon(aes(ymin = (lower_PI), ymax = (upper_PI)), alpha = .2, linetype = 'solid', col = 'black') +
 geom_ribbon(aes(ymin = (lower_PI_Bonf), ymax = (upper_PI_Bonf)), alpha = .2, col = 'black', linetype = 'dashed') +
-geom_ribbon(aes(ymin = (lower_PI_WH), ymax = (upper_PI_WH)), alpha = .2, col = 'black', linetype = 'dotted')+labs(xlab = "Square Footage of Living Space", ylab = "Price", title = "Untransformed, WH band dotted, Bonf. dashed, normal solid")
+geom_ribbon(aes(ymin = (lower_PI_WH), ymax = (upper_PI_WH)), alpha = .2, col = 'black', linetype = 'dotted')+labs(x = "Square Footage of Living Space", y = "Price", title = "Untransformed PI, WH band dotted, Bonf. dashed, unadj. solid") + theme(plot.title = element_text(size=6))
+```
 
+```{r, echo=FALSE}
 ggplot(housing_pred, aes(x = exp(log.sqft_living.), y = exp(log.price.))) + geom_point(alpha = .5, col = 'black') +
 stat_smooth(method = "lm", se = FALSE) +
 geom_ribbon(aes(ymin = exp(lower_CI), ymax = exp(upper_CI)), alpha = .2, linetype = 'solid', col = 'black') +
 geom_ribbon(aes(ymin = exp(lower_CI_Bonf), ymax = exp(upper_CI_Bonf)), alpha = .2, linetype = 'dashed', col = 'black') +
-geom_ribbon(aes(ymin = exp(lower_CI_WH), ymax = exp(upper_CI_WH)), alpha = .2, linetype = 'dotted', col = 'black')+labs(xlab = "Square Footage of Living Space", ylab = "Price", title = "Back transformed, WH band dotted, Bonf. dashed, unadj. solid")
+geom_ribbon(aes(ymin = exp(lower_CI_WH), ymax = exp(upper_CI_WH)), alpha = .2, linetype = 'dotted', col = 'black')+labs(x = "Square Footage of Living Space", y = "Price", title = "Back transformed CI, WH band dotted, Bonf. dashed, unadj. solid") + theme(plot.title = element_text(size=6))
 
 ggplot(housing_pred, aes(x = (log.sqft_living.), y = (log.price.))) + geom_point(alpha = .5, col = 'black') +
 stat_smooth(method = "lm", se = FALSE) +
 geom_ribbon(aes(ymin = (lower_CI), ymax = (upper_CI)), alpha = .2, linetype = 'solid', col = 'black') +
 geom_ribbon(aes(ymin = (lower_CI_Bonf), ymax = (upper_CI_Bonf)), alpha = .2, linetype = 'dashed', col = 'black') +
-geom_ribbon(aes(ymin = (lower_CI_WH), ymax = (upper_CI_WH)), alpha = .2, linetype = 'dotted', col = 'black')+labs(xlab = "Square Footage of Living Space", ylab = "Price", title = "Untransformed, WH band dotted, Bonf. dashed, unadj. solid")
+geom_ribbon(aes(ymin = (lower_CI_WH), ymax = (upper_CI_WH)), alpha = .2, linetype = 'dotted', col = 'black')+labs(x = "Square Footage of Living Space", y = "Price", title = "Untransformed CI, WH band dotted, Bonf. dashed, unadj. solid") + theme(plot.title = element_text(size=6))
 ```
 
 The above plots deal with simultaneous inference. It is important to adjust for multiple comparisons, as it is foolish to think that the intervals returned through standard methods at every point cover their true parameter with probability $(1-\alpha)$. Thus, an adjustment is needed to widen the intervals, given by either Bonferroni's procedure or the Working-Hotelling procedure. The standard method leads to the lower bound on interval size of both procedures, but they introduce greater variance so as to provide greater accuracy while not straying too far from this lower bound.
 
-It is known that the Working-Hotelling procedure outperforms the Bonferroni procedure when larger subsets of the predictor are considered. Since we are examining the entire support of the predictor here, we prefer the WH procedure. The plots also clearly show that the WH band is tighter than the Bonferroni band. Both of these methods are preferred to the unadjusted, however.
+It is known that the Working-Hotelling procedure outperforms the Bonferroni procedure when larger subsets of the predictor are considered. Since we are examining the entire support of the predictor here, we prefer the WH procedure. The plots also clearly show that the WH band is tighter than the Bonferroni band. Both of these methods are preferred to the unadjusted, however. Finally, it should be noted that things get squirrely with the back-transformed CI, for all procedures, as it appears simultaneous inference breaks down.
 
 # Conclusion
 
