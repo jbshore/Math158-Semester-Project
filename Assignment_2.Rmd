@@ -7,12 +7,6 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-# Introduction:
-We are interested in examining the relationship between square footage of living space of a house and that house's price for houses sold in 2015 in King County, WA (mostly Seattle). Specifically, we are curious if square footage of living space is a good predictor of price for these houses.
-
-```{r}
 library(dplyr)
 library(ggplot2)
 library(infer)
@@ -20,44 +14,50 @@ library(skimr)
 library(broom)
 library(readr)
 options(digits=3)
+```
+
+# Introduction:
+We are interested in examining the relationship between square footage of living space of a house and that house's price for houses sold in 2015 in King County, WA (mostly Seattle). Specifically, we are curious if square footage of living space is a good predictor of price for these houses.
+
+```{r}
 
 ggplot(housing)+geom_point(aes(x = sqft_living, y = price))
 # price vs. sqft living
 
 housing_lm <- lm(price ~ sqft_living, data=housing)
-
-augment(housing_lm) %>%
-ggplot( aes(x=.fitted, y=.resid)) +
-geom_point() +
-geom_hline(yintercept = 0)
-
+# untransformed model
 
 augment(housing_lm) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
 geom_hline(yintercept = 0)
+# untransformed std. resid. plot
 
-# transforming X using log 
+
 housing_lm2 <- lm(price ~ log(sqft_living), data=housing)
+# transforming X using log (logrithmic model)
 
 augment(housing_lm2) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
 geom_hline(yintercept = 0)
+# transformed log(x) residual
 
 
-# transforming both X and Y using log 
 housing_lm3 <- lm(log(price) ~ log(sqft_living), data=housing)
+# transforming both X and Y using log (power model)
 
 housing %>%
 ggplot(aes(x=log(sqft_living), y=log(price))) +
 geom_point() +
 geom_smooth(method="lm", se=FALSE)
+# transformed data plot
 
 augment(housing_lm3) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
 geom_hline(yintercept = 0)
+# power model residual
 ```
 Before the transformation, the data are not linear with constant variability. And then we tried transformation X with log, and again the data are not linear with constant variability. In the end, we tried tranforming both X and Y with log, and this time the data are linear with constant variability. 
 
