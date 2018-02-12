@@ -13,7 +13,28 @@ knitr::opts_chunk$set(echo = TRUE)
 We are interested in examining the relationship between square footage of living space of a house and that house's price for houses sold in 2015 in King County, WA (mostly Seattle). Specifically, we are curious if square footage of living space is a good predictor of price for these houses.
 
 ```{r}
+library(dplyr)
+library(ggplot2)
+library(infer)
+library(skimr)
+library(broom)
+library(readr)
+options(digits=3)
+
 ggplot(housing)+geom_point(aes(x = sqft_living, y = price))
 # price vs. sqft living
+
+housing_lm <- lm(price ~ sqft_living, data=housing)
+
+augment(housing_lm) %>%
+ggplot( aes(x=.fitted, y=.resid)) +
+geom_point() +
+geom_hline(yintercept = 0)
+
+
+augment(housing_lm) %>%
+ggplot( aes(x=.fitted, y=.std.resid)) +
+geom_point() +
+geom_hline(yintercept = 0)
 ```
 
