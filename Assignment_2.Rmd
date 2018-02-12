@@ -62,3 +62,11 @@ geom_hline(yintercept = 0)
 Before the transformation, the data are not linear with constant variability. And then we tried transformation X with log, and again the data are not linear with constant variability. In the end, we tried tranforming both X and Y with log, and this time the data are linear with constant variability. 
 
 
+#assess the fit of your model 
+```{r}
+summary(housing_lm3)
+
+
+```
+$R^2$ value is 0.456
+
