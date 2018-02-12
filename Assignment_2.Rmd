@@ -36,5 +36,14 @@ augment(housing_lm) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
 geom_hline(yintercept = 0)
+
+# transforming X using log 
+housing_lm2 <- lm(price ~ log(sqft_living), data=housing)
+
+augment(housing_lm2) %>%
+ggplot( aes(x=.fitted, y=.std.resid)) +
+geom_point() +
+geom_hline(yintercept = 0)
+
 ```
 
