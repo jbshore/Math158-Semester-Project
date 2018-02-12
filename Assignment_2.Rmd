@@ -13,7 +13,7 @@ library(infer)
 library(skimr)
 library(broom)
 library(readr)
-options(digits=3)
+options(digits=10)
 ```
 
 # Introduction:
@@ -65,4 +65,10 @@ Before the transformation, the data are not linear with constant variability. An
 summary(housing_lm3)
 ```
 # Hypothesis Test
-We now run a hypothesis test on the value of $\beta_1$. Our null hypothesis is that $\beta_1 = 0$, and our alternative hypothesis is that $\beta_1 \neq 0$. As shown in the table above, the relevant p-value is effectively 0. Thus, we may reject the null hypothesis at any reasonable level, and say with confidence that $\beta_1 = 0$ is false, and there is in fact some linear relationship between the logarithm of square footage of living space and the logarithm of price for houses sold in King County in 2015.
+We now run a hypothesis test on the value of $\beta_1$. Our null hypothesis is that $\beta_1 = 0$, and our alternative hypothesis is that $\beta_1 \neq 0$. As shown in the table above, the t-test statistic is 134, yielding a p-value of effectively 0. Thus, we may reject the null hypothesis at any reasonable level, and say with confidence that $\beta_1 = 0$ is false, and there is in fact some linear relationship between the logarithm of square footage of living space and the logarithm of price for houses sold in King County in 2015.
+
+```{r}
+specific <- data.frame(sqft_living=log(2000))
+predict(housing_lm3, newdata = specific, interval = 'confidence', level = .95)
+```
+
