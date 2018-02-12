@@ -84,3 +84,6 @@ mean.int <- exp(predict(housing_lm3, newdata = specific, interval = 'confidence'
 pred.int <- exp(predict(housing_lm3, newdata = specific, interval = 'prediction', level = .95))
 ```
 
+# Conclusion
+
+The result is that there is a positive relationship between sqft_living and price, meaning in general, the bigger the house, the more expensive it is. For the most part, the data were what we expected, as we can see from the scatter plot. What surprised us was the residual plot before the transformation, how it
