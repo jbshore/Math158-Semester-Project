@@ -79,7 +79,8 @@ summary(housing_lm3)
 We now run a hypothesis test on the value of $\beta_1$. Our null hypothesis is that $\beta_1 = 0$, and our alternative hypothesis is that $\beta_1 \neq 0$. As shown in the table above, the t-test statistic is 134, yielding a p-value of effectively 0. Thus, we may reject the null hypothesis at any reasonable level, and say with confidence that $\beta_1 = 0$ is false, and there is in fact some linear relationship between the logarithm of square footage of living space and the logarithm of price for houses sold in King County in 2015.
 
 ```{r}
-specific <- data.frame(sqft_living=log(2000))
-predict(housing_lm3, newdata = specific, interval = 'confidence', level = .95)
+specific <- data.frame(sqft_living=2000)
+mean.int <- exp(predict(housing_lm3, newdata = specific, interval = 'confidence', level = .95))
+pred.int <- exp(predict(housing_lm3, newdata = specific, interval = 'prediction', level = .95))
 ```
 
