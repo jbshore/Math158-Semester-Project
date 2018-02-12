@@ -61,6 +61,7 @@ geom_hline(yintercept = 0)
 ```
 Before the transformation, the data are not linear with constant variability. And then we tried transformation X with log, and again the data are not linear with constant variability. In the end, we tried tranforming both X and Y with log, and this time the data are linear with constant variability. 
 
+<<<<<<< HEAD
 
 #assess the fit of your model 
 ```{r}
@@ -70,3 +71,10 @@ summary(housing_lm3)
 ```
 $R^2$ value is 0.456
 
+=======
+```{r}
+summary(housing_lm3)
+```
+# Hypothesis Test
+We now run a hypothesis test on the value of $\beta_1$. Our null hypothesis is that $\beta_1 = 0$, and our alternative hypothesis is that $\beta_1 \neq 0$. As shown in the table above, the relevant p-value is effectively 0. Thus, we may reject the null hypothesis at any reasonable level, and say with confidence that $\beta_1 = 0$ is false, and there is in fact some linear relationship between the logarithm of square footage of living space and the logarithm of price for houses sold in King County in 2015.
+>>>>>>> 01994d18da66ab97c516c47843e3424e90a13170
