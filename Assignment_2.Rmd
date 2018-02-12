@@ -1,7 +1,7 @@
 ---
 title: "Assignment 2"
 author: "Jacob Shore & Derek Huang"
-date: "February 11, 2018"
+date: "February 12, 2018"
 output: html_document
 ---
 
@@ -9,22 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+# Introduction:
+We are interested in examining the relationship between square footage of living space of a house and that house's price for houses sold in 2015 in King County, WA (mostly Seattle). Specifically, we are curious if square footage of living space is a good predictor of price for these houses.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+ggplot(housing)+geom_point(aes(x = sqft_living, y = price))
+# price vs. sqft living
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
