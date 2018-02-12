@@ -24,55 +24,39 @@ We are interested in examining the relationship between square footage of living
 ```{r}
 set.seed(12897312)
 housing2 <- housing[sample(nrow(housing), 1000),]
-ggplot(housing2)+geom_point(aes(x = sqft_living, y = price))
+ggplot(housing2)+geom_point(aes(x = sqft_living, y = price)) + labs(xlab = 'sq. ft. living space', ylab = "Price", title = "Standard model for price vs. sq. ft. living space")
 # price vs. sqft living
-
 housing_lm <- lm(price ~ sqft_living, data=housing2)
 # untransformed model
-
 augment(housing_lm) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
-geom_hline(yintercept = 0)
+geom_hline(yintercept = 0) + labs(xlab = "Fitted", ylab = "Std. Resid.", title = "Standardized Residual Plot")
 # untransformed std. resid. plot
-
-
-housing_lm2 <- lm(price ~ log(sqft_living), data=housing2)
-# transforming X using log (logrithmic model)
-
-augment(housing_lm2) %>%
-ggplot( aes(x=.fitted, y=.std.resid)) +
-geom_point() +
-geom_hline(yintercept = 0)
-# transformed log(x) residual
-
 
 housing_lm3 <- lm(log(price) ~ log(sqft_living), data=housing2)
 # transforming both X and Y using log (power model)
-
 housing2 %>%
 ggplot(aes(x=log(sqft_living), y=log(price))) +
 geom_point() +
-geom_smooth(method="lm", se=FALSE)
+geom_smooth(method="lm", se=FALSE) + labs(xlab = 'Log(sq. ft. living space)', ylab = "Log(price)", title = "Power model for price vs. sq.ft. living space")
 # transformed data plot
-
 augment(housing_lm3) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
-geom_hline(yintercept = 0)
+geom_hline(yintercept = 0) + labs(xlab = "Fitted", ylab = "Std. Resid.", title = "Standardized Residual Plot")
 # power model residual
 ```
 While the pre-transformed data is certainly linear in nature, it does not have constant variability. In fact, the data is severely heteroskedastic, as errors increase along with the predictor variable (sqft_living). We first tried a logarithmic transformation on the predictor, and while the variance was more stable, residual analysis made it clear that this transformation was introducting unintended curvilinearity into our model. We then tried a power model, tranforming both the predictor and response logarithmically. This model seems to address our concerns, as the data is still linear but now is shown to have constant variance as well. 
 
-
-```{r}
+```{r, echo=FALSE}
 summary(housing_lm3)
 ```
 The $R^2$ value is 0.4711. This means that 47.11% of the variance in $log(price)$ is explained by a linear relationship with $log(sqft_living)$. The corresponding plot (found above) shows that there is seemingly a strong, positive relationship between $log(price)$ and $log(sqft_living)$, as we expected. In the residual plot, we see constant variability, so we are satisfied with the fit of this model. 
 
 We now run a hypothesis test on the value of $\beta_1$. Our null hypothesis is that $\beta_1 = 0$, and our alternative hypothesis is that $\beta_1 \neq 0$. As shown in the table above, the t-test statistic is 29.82, yielding a p-value of effectively 0. Thus, we may reject the null hypothesis at any reasonable level, and say with confidence that $\beta_1 = 0$ is false, and there is in fact some linear relationship between the logarithm of square footage of living space and the logarithm of price for houses sold in King County in 2015.
 
-```{r}
+```{r, echo=FALSE}
 specific <- data.frame(sqft_living=2000)
 mean.int <- exp(predict(housing_lm3, newdata = specific, interval = 'confidence', level = .95))
 pred.int <- exp(predict(housing_lm3, newdata = specific, interval = 'prediction', level = .95))
@@ -80,7 +64,7 @@ pred.int <- exp(predict(housing_lm3, newdata = specific, interval = 'prediction'
 
 We decided to look at predictions for properties with homes that were 2,000 square feet. This is considered a 'standard' size home, perhaps even a large one inside the city (where much of our data comes from). A 95% confidence interval for the mean price of lot with a 2000 sq. ft. house turns out to be (\$470158.8, \$493891.7) -- pretty pricy! For an individual 2000 sq. ft. house, we are 95% confident that the cost will be between (\$222152.5, \$1045261). Again, not particularly reassuring for someone looking to buy a house in Seattle.
 
-```{r, include=FALSE}
+```{r, echo=FALSE}
 crit_val <- qt(.975, glance(housing_lm3)$df.resid)
 housing_gl <- broom::glance(housing_lm3)
 housing_sig <- dplyr::pull(housing_gl, sigma)
@@ -105,7 +89,7 @@ lower_CI_WH = .fitted - crit_WH * .se.fit,
 upper_CI_WH = .fitted + crit_WH * .se.fit)
 ```
 
-```{r}
+```{r, echo=FALSE}
 ggplot(housing_pred, aes(x = exp(log.sqft_living.), y = exp(log.price.))) + geom_point(alpha = .5, col = 'black') +
 stat_smooth(method = "lm", se = FALSE) +
 geom_ribbon(aes(ymin = exp(lower_PI), ymax = exp(upper_PI)), alpha = .2, linetype = 'solid', col = 'black') +
