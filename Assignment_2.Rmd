@@ -68,7 +68,7 @@ summary(housing_lm3)
 
 
 ```
-$R^2$ value is 0.456
+$R^2$ value is 0.456. That means 45.6% of the variance in $Log(price)$ is explained by the linear relationship between $log(sqft_living)$ and $log(price)$. In the residual plot, we see constant variability and it's a good fit. 
 
 
 ```{r}
