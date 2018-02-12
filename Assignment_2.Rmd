@@ -45,5 +45,20 @@ ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
 geom_hline(yintercept = 0)
 
+
+# transforming both X and Y using log 
+housing_lm3 <- lm(log(price) ~ log(sqft_living), data=housing)
+
+housing %>%
+ggplot(aes(x=log(sqft_living), y=log(price))) +
+geom_point() +
+geom_smooth(method="lm", se=FALSE)
+
+augment(housing_lm3) %>%
+ggplot( aes(x=.fitted, y=.std.resid)) +
+geom_point() +
+geom_hline(yintercept = 0)
 ```
+Before the transformation, the data are not linear with constant variability. And then we tried transformation X with log, and again the data are not linear with constant variability. In the end, we tried tranforming both X and Y with log, and this time the data are linear with constant variability. 
+
 
