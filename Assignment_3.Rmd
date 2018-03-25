@@ -1,0 +1,38 @@
+---
+title: "Assignment 3"
+author: "Jacob Shore & Derek Huang"
+date: "March 24, 2018"
+output: html_document
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width = 3.5, fig.height = 3.5, echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(infer)
+library(skimr)
+library(broom)
+library(readr)
+options(digits=5)
+
+library(readr)
+kc_house_data <- read_csv("~/Downloads/kc_house_data.csv")
+housing <- kc_house_data
+set.seed(12897312)
+housing2 <- housing[sample(nrow(housing), 1000),]
+```
+
+```{r}
+# Model: Predict price using sqft_living, sqft_lot, condition, view, long, lat
+library(GGally)
+ggpairs(housing2,
+columns = c("price", "sqft_living", "sqft_lot", "condition", "view", "bedrooms", "lat", "long"))
+
+# testing interaction
+inter.model <- lm(price ~ (sqft_living + sqft_lot + condition + view + lat + long)^2, data=housing2)
+no.inter.model <- lm(price ~ sqft_living + sqft_lot + condition + view + lat + long, data=housing2)
+anova(inter.model, no.inter.model)
+```
+
