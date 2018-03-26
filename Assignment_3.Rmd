@@ -28,29 +28,68 @@ housing2 <- housing[sample(nrow(housing), 1000),]
 # Model: Predict price using sqft_living, sqft_lot, condition, view, long, lat
 library(GGally)
 ggpairs(housing2,
-columns = c("price", "sqft_living", "sqft_lot", "condition", "view", "bedrooms", "lat", "long"))
+columns = c("price", "sqft_living", "sqft_lot", "condition", "view", "lat", "long"))
 
 # testing interaction
 
-inter.model <- lm(price ~ (sqft_living + log(sqft_lot) + condition + view + lat + long)^2, data=housing2)
-no.inter.model <- lm(price ~ sqft_living + log(sqft_lot) + condition + view + lat + long, data=housing2)
-anova(inter.model, no.inter.model)
+inter.model <- lm(log(price) ~ (sqft_living + log(sqft_lot) + condition + view + lat + long)^2, data=housing2)
+no.inter.model <- lm(log(price) ~ sqft_living + log(sqft_lot) + condition + view + lat + long, data=housing2)
 summary(inter.model)
 summary(no.inter.model)
 ```
 
-We did log on sqft_lot because all of them are bunched up around smaller values
+We did log on sqft_lot because all of them are bunched up around smaller values. We did log on price to get rid of heteroskedasticity. This is more apparent below when we look at residuals.
 
-In order to figure out which variables are interacting, we compare the non-interacting model with the interacting model, and since log(sqft_lot) is insignificant so the interaction terms that we keep are sqft_living:condition, sqft_living:view, sqft_living:lat and view:lat.
+In order to figure out which variables are interacting, we compare the non-interacting model with the interacting model, and since log(sqft_lot) and long are insignificant so the interaction terms that we keep are sqft_living:condition, sqft_living:view, and view:lat.
 
 ```{r}
 # Model that we are using
-full.model <- lm(price ~ (sqft_living + log(sqft_lot) + condition + view + lat + long + sqft_living*condition + sqft_living*view + sqft_living*lat + view*lat), data=housing2)
+full.model <- lm(log(price) ~ (sqft_living + log(sqft_lot) + condition + view + lat + long + sqft_living*condition + sqft_living*view + view*lat), data=housing2)
 
 # reduced model
-reduced.model <- lm(price ~ (sqft_living + view + long + sqft_living*view), data=housing2)
+reduced.model <- lm(log(price) ~ (sqft_living + lat + sqft_living*view + sqft_living*condition), data=housing2)
 
 anova(full.model, reduced.model)
 ```
 
+We'll report the reduced (smaller) model. Even though R2-adj is slightly lower, the nested f-test was not significant (p-val = .11).
+Reduced: R2 = .7094 R2.adj = .7076
+Full: R2 = .7111 R2.adj = .7085
+
+We refer to the reduced model from now on as "the model"
+
+```{r}
+# Residual plot
+augment(reduced.model) %>%
+ggplot( aes(x=.fitted, y=.std.resid)) +
+geom_point() +
+geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot")
+```
+Looks good
+
+```{r}
+del.stud.resids <- rstudent(full.model)
+# Bonf. critical value is 
+# t(1-alpha/2n, n-p-1)
+Bon.alpha <- .01/length(del.stud.resids)
+Bon.crit.upper <- qt(1-Bon.alpha/2, length(del.stud.resids)-1-4)
+Bon.crit.lower <- qt(Bon.alpha/2, length(del.stud.resids)-1-4)
+
+outliers.y <- subset(del.stud.resids, (del.stud.resids < Bon.crit.lower) | (del.stud.resids > Bon.crit.upper))
+outliers.y.sort <- sort(abs(outliers.y), decreasing = TRUE)
+
+hat.diags <- hatvalues(reduced.model)
+# considered to be outlier if it is 
+# more than twice mean leverage value
+mean.lev <- mean(hat.diags)
+lev.crit <- 2*mean.lev
+outliers.x <- subset(hat.diags, hat.diags > lev.crit)
+outliers.x.sort <- sort(outliers.x, decreasing = TRUE)
+
+# Dffits
+#dfbetas
+#cook's distance
+```
+
+No outliers in Y direction. 100 outliers in X direction. 
 
