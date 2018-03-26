@@ -2,12 +2,12 @@
 title: "Assignment 3"
 author: "Jacob Shore & Derek Huang"
 date: "March 26, 2018"
-output: html_document
+output:
   pdf_document: default
   html_document: default
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(fig.width = 3.5, fig.height = 3.5, echo = TRUE)
 library(dplyr)
 library(ggplot2)
@@ -24,20 +24,19 @@ set.seed(12897312)
 housing2 <- housing[sample(nrow(housing), 1000),]
 ```
 
-Introduction: Our dataset describes over 21,000 homes sold between May 2014 and May 2015 in King County, WA (Seattle area). The initial dataset consists of 19 variables: price, the number of bedrooms/bathrooms, the size of the house/parking lot/basement, the number of floors, whether waterfront or not, overall condition/grade, built year, renovation year, zip code and latitude/longitude coordinate. 
+Our dataset describes over 21,000 homes sold between May 2014 and May 2015 in King County, WA (Seattle area). The dataset consists of 19 variables: price, the number of bedrooms/bathrooms, the size of the house/parking lot/basement, the number of floors, whether waterfront or not, overall condition/grade, built year, renovation year, zip code and latitude/longitude coordinate. 
 
-We are interested in predicting the price of a house given all the other variables. In this report, we are going to look at the relationships between price (response variable) and sqft_living, sqft_lot, condition, view, long, lat (explanatory variables) since these are the variables that would affect the price intuitively. We have randomly selected 1,000 of the 21,613 observations to be included in our model analysis. 
+In this report, we will examine the relationship between price (response variable) and square footage of living space, square footage of property, condition, view, longitude, and latatitude (explanatory variables). These are the variables that intutively seem like they should most affect the price. We have randomly selected 1,000 of the 21,613 observations to be included in our model analysis. 
  
-To fit the regression model, we have selected the following explanatory variables:
-sqft_living: the size of the house in square foot
-sqft_lot: the size of the property in square foot
-condition: condition of the house in a scale of 1-10
-view: how good the view is from the house
-long: longitude of the house
-lat: latitude of the house 
-All the explanatory variables are numeric.
+The variabes will be referred to as follows (note that two of them are factor variables with 5 levels each):
+sqft_living: the size of the house by square footage
+sqft_lot: the size of the property by square footage
+condition: condition of the house on a scale of 1-5
+view: appraiser's report on how nice the view is on a scale 0-4
+long: longitude of the house in degrees
+lat: latitude of the house in degrees
 
-```{r}
+```{r, echo=FALSE}
 # Model: Predict price using sqft_living, sqft_lot, condition, view, long, lat
 library(GGally)
 ggpairs(housing2,
@@ -45,53 +44,68 @@ columns = c("price", "sqft_living", "sqft_lot", "condition", "view", "lat", "lon
 
 ```
 
-Looking at the pairs plot, apart from price and sqft_living, we don't see two highly correlated explanatory variables. As far as quadratic term and log transformation go, We did log on sqft_lot because all of them are bunched up around smaller values. We did log on price to get rid of heteroskedasticity. This is more apparent below when we look at residuals.
+Looking at the pairs plot, apart from price and sqft_living, we don't see two highly correlated explanatory variables (we wont remove it as it is a very strong predictor, as described in the last assignment). We decided to take a logarithmic transformation on sqft_lot because nearly all of the observations are bunched up around smaller values. We also did a logarithmic transformation on price, the response variable, to get rid of heteroskedasticity, which is a major problem in the untransformed model as will be shown below. We believe this is because sqft_living is by far the strongest predictor, and as shown in the previous assignment, the relationship between sqft_living and price is heteroskedastic. With this transformation, the residual plot (shown far below) is much more appealing. There doesn't appear to be a reason to fit a quadratic term.
 
-```{r}
+```{r, echo=FALSE}
 # testing interaction
+model1 <- lm(log(price) ~ (sqft_living + as.factor(view) + lat + as.factor(condition)), data=housing2)
+model2 <- lm(log(price) ~ (sqft_living + log(sqft_lot) + as.factor(condition) + as.factor(view) + lat + long), data=housing2)
 
-inter.model <- lm(log(price) ~ (sqft_living + log(sqft_lot) + condition + view + lat + long)^2, data=housing2)
-no.inter.model <- lm(log(price) ~ sqft_living + log(sqft_lot) + condition + view + lat + long, data=housing2)
-summary(inter.model)
-summary(no.inter.model)
+# anova(model1, model2)
 ```
 
-In order to figure out which variables are interacting, we compare the non-interacting model with the interacting model, and since log(sqft_lot) and long are insignificant so the interaction terms that we keep are sqft_living:condition, sqft_living:view, and view:lat (among significant variables). 
+First, a nested F-test was run (see below) between a model with all 6 predictor variables, and a model with longitude and log(sqft_lot) removed (no interaction terms). The resulting p-value of .2684 implies that the two variables removed are not contributing significantly to the model, and may be removed. No other variables were insignificant enough to be removed when a similar procedure was run.
 
+```{r, echo=FALSE}
+anova(model1, model2)
+```
 
-Looking at the coefficients in non-interaction model, sqft_living, condition, view, and lat are significant. 
+Next, we examine the role interaction plays in our model, now on 4 predictors. First, we run a nested F-test between the model with all pairwise interaction terms, and the model without any interaction terms (see below). The resulting p-value of ~0 implies that interaction does play a significant role in the model, and should be included. As for which interaction terms out of the 66 total we include, we examined the t statistics in the summary output of the pairwise interaction model (not shown here). It turns out that sqft_living interacts significantly at the .01 level with at least one level (usually more) of each factor variable, but not with latitude. Multiple levels of view also interact with latitude. There are no other significant interactions between any of the other variables, regardless of level. Thus, the interaction terms we keep moving forward are view/lat, sqft_living/condition and sqft_living/view.
 
-```{r}
-# Fit our model
+```{r, echo=FALSE}
+inter.model <- lm(log(price) ~ (sqft_living +  as.factor(condition) + as.factor(view) + lat)^2, data=housing2)
+no.inter.model <- lm(log(price) ~ sqft_living + as.factor(condition) + as.factor(view) + lat, data=housing2)
+# summary(inter.model)
+# summary(no.inter.model)
+anova(inter.model, no.inter.model)
+```
 
-# Model that we are using
-full.model <- lm(log(price) ~ (sqft_living + log(sqft_lot) + condition + view + lat + long + sqft_living*condition + sqft_living*view + view*lat), data=housing2)
+Next, we examined what would happen if condition (our least significant predictor) was removed. We ran a nested F-test, with the full model being as above, and the reduced having condition and the sqft_living/condition interaction removed. We also removed the view/lat interaction, as it was barely significant above. The results are below (so the reduced model just has sqft_living, view, lat, and sqft_living/view interaction).
+
+```{r,echo=FALSE}
+# full model
+full.model <- lm(log(price) ~ (sqft_living + as.factor(condition) + as.factor(view) + lat + sqft_living*as.factor(condition) + sqft_living*as.factor(view) + as.factor(view)*lat), data=housing2)
 
 # reduced model
-reduced.model <- lm(log(price) ~ (sqft_living + lat + sqft_living*view + sqft_living*condition), data=housing2)
+reduced.model <- lm(log(price) ~ (sqft_living + lat + as.factor(view) + sqft_living*as.factor(view)), data=housing2)
 
 anova(full.model, reduced.model)
 ```
 
-We'll report the reduced (smaller) model. Even though R2-adj is slightly lower, the nested f-test was not significant (p-val = .11).
-Reduced: R2 = .7094 R2.adj = .7076
-Full: R2 = .7111 R2.adj = .7085
+The resulting p-value of ~0 implies that the reduced model should not be reported here.
 
-We refer to the reduced model from now on as "the model"
+Reduced: R^2 = .7037 R2.adj = .7007
+Full: R^2 = .7171 R2.adj = .711
 
-R2 value tells us that around 70% of the variability in the explanatory variables can be explained by the linear model. This doesn't necessarily mean that it is guaranteed that the model will accurately describe
-the population because there are some factors that can't be controled in the model and the model is based on subjective premises. 
+We refer to the full model from above now on as "the model." The R^2 value tells us that around 70% of the variability in the response data can be explained by the linear relationship with the predictor variables. This doesn't necessarily mean that it is guaranteed that the model will accurately describe the population because there are some factors that can't be controled in the model and the model is based on subjective premises. We now continue with "the model."
 
-```{r}
+```{r, echo=FALSE}
 # Residual plot
-augment(reduced.model) %>%
+augment(full.model) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
 geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot")
 ```
-Looks good
 
-```{r}
+The standardized residual plot here shows exactly what we want to see, and the technical assumptions are met. Note that when price is not transformed (not shown here), the residual plot shows severe heteroskedasticity (very similar shape to the plots from the last assignment). Let's examine the coefficients.
+
+```{r, echo=FALSE}
+summary(full.model)
+```
+
+Looking at the coefficients here, we can see that square footage of living is a very strong positive predictor of price. Low condition grades are a negative predictor of price, while higher condition grades are a positive prediction of price, but condition overall is a weaker predictor. Having a poor view is not indicative of much change in the price, but a good view can skyrocket the price prediction. Finally, higher latitude (more North) seems to predict higher prices.
+
+```{r, echo=FALSE}
 del.stud.resids <- rstudent(full.model)
 # Bonf. critical value is 
 # t(1-alpha/2n, n-p-1)
@@ -102,7 +116,7 @@ Bon.crit.lower <- qt(Bon.alpha/2, length(del.stud.resids)-1-4)
 outliers.y <- subset(del.stud.resids, (del.stud.resids < Bon.crit.lower) | (del.stud.resids > Bon.crit.upper))
 outliers.y.sort <- sort(abs(outliers.y), decreasing = TRUE)
 
-hat.diags <- hatvalues(reduced.model)
+hat.diags <- hatvalues(full.model)
 # considered to be outlier if it is 
 # more than twice mean leverage value
 mean.lev <- mean(hat.diags)
@@ -110,31 +124,88 @@ lev.crit <- 2*mean.lev
 outliers.x <- subset(hat.diags, hat.diags > lev.crit)
 outliers.x.sort <- sort(outliers.x, decreasing = TRUE)
 
-# Dffits
+# unique(which(dffits(full.model) > 2*sqrt(4/1000)))
+# unique(which(cooks.distance(full.model) > .005))
+plot(cooks.distance(full.model), main = "Cook's Distance Index Plot", ylab = "Cook's Distance")
+plot(dffits(full.model), main = "DFFITS Index Plot", ylab = "DFFITS")
 #dfbetas
 #cook's distance
+inter <- intersect(unique(which(dffits(reduced.model) > 2*sqrt(4/1000))), unique(which(cooks.distance(reduced.model) > .005)))
+union <- union(unique(which(dffits(reduced.model) > 2*sqrt(4/1000))), unique(which(cooks.distance(reduced.model) > .0050)))
 ```
 
-No outliers in Y direction. 100 outliers in X direction. 
+A Bonferroni test for outliers revealed no outliers in the Y direction (residuals). Analysis of the diagonals of the hat matrix revealed 111 outliers in the X direction, although looking at the residual plot, this is probably because the data is very clustered around a small range of house prices, and none of the outliers look particularly egregious. 
 
+DFFITS was run on all observations to test influence. Using a threshold of 2*sqrt(n/p) = .1265 as the cutoff, it was found that 88 values were influential cases. In other words, these observations had a significant effect on the prediction of their own price value. 
 
-```{r}
-# select variables using forward selection approach 
+Cook's Distance was used to further assess the influence of these points. As shown in the index plot, a few of the observations had a significant effect on the prediction values of the other observations. We defined .005 to be the cutoff point, which led to 53 observations being deemed influential.  
 
-add1(lm(price~1, data=housing2), price ~ sqft_living + sqft_lot + condition + view + lat + long, test="F")
-# sqft_living is the most significant variable (lowest p value & highest F value)
-add1(lm(price ~ sqft_living, data=housing2), price ~ sqft_living + sqft_lot + condition + view + lat + long, test="F")
-# view is the second most significant variable after sqft_living
-add1(lm(price ~ sqft_living + view, data=housing2), price ~ sqft_living + sqft_lot + condition + view + lat + long, test="F")
-# next is lat 
-add1(lm(price ~ sqft_living + view + lat, data=housing2), price ~ sqft_living + sqft_lot + condition + view + lat + long, test="F")
-# lat is followed by condition
-add1(lm(price ~ sqft_living + view + lat + condition, data=housing2), price ~ sqft_living + sqft_lot + condition + view + lat + long, test="F")
-# then by long
+The union of these two sets of influential observations is of magnitude 71, while the intersection is of magnitude 24. Two additional models were created: one with the intersection removed and one with the union removed. The intersection model, shown first below, did not improve at all (R^2 adjusted was .7029, almost the same, no difference in significance of variables). The union model did improve slightly, but not in a large way (R^2 adjusted was .7152, again no difference in significance of variables). Thus, we conclude that removing the observations has no significant effect on the model, and we leave them in. 
+
+Observation 323 in particular stands out in the index plots above. However, running the model on the entire set sans 323 also had no effect (exact same R^2 adjusted as the model with all points). We now turn to forward selection as a seperate model building tool.
+
+```{r, echo=FALSE}
+housing.trimmed.intersect <- housing2[-inter,]
+trimmed.intersect.model <- lm(log(price) ~ (sqft_living + lat + sqft_living*as.factor(view) + sqft_living*as.factor(condition)), data=housing.trimmed.intersect)
+
+housing.trimmed.union <- housing2[-union,]
+trimmed.union.model <- lm(log(price) ~ (sqft_living + lat + sqft_living*as.factor(view) + sqft_living*as.factor(condition)), data=housing.trimmed.union)
+
+trimmed <- housing2[-323,]
+trimmed.model <- lm(log(price) ~ (sqft_living + lat + sqft_living*as.factor(view) + sqft_living*as.factor(condition)), data=trimmed)
 ```
-With forward selection, We select sqft_living, view, lat, condition, long (in order of significance). 
 
+With forward selection using .001 as the alpha to enter, we select sqft_living, lat, waterfront, grade, zipcode, view, condition, sqft_lot, sqft_above, yr_built (in order of significance). Note that interaction terms were not included in this model.
 
-It makes sense that sqft-living is the most significant variables since the bigger the house, the more expensive it is. Our model analysis tells us that people tend to care about the size of the house more than the size of the property because when you are living in a house, the area that matters is going to be the house, the grass area in the front, not so much. We thought sqft-living and sqft_lot would be highly correlated and thus one of them could be taken out. But that is not the case in the model.
+```{r, echo=FALSE}
+forward.model <- lm(log(price) ~ sqft_living + as.factor(view) + lat + as.factor(condition) + as.factor(zipcode) + as.factor(yr_built) + sqft_above + sqft_lot + as.factor(waterfront) + as.factor(grade), data=housing2)
 
-However, it is surprising that latitude is siginificant while longitude is not. We think that it is because usually the same amount of change in latitude has a bigger impact on the neighborhood than in longitude. 
+augment(forward.model) %>%
+ggplot( aes(x=.fitted, y=.std.resid)) +
+geom_point() +
+geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot Forward Selection Model")
+```
+
+As evident from the residual plot and summary above (note the R^2 adjusted value around .88), this model is seemingly considerably better than the model used prior. However, the BIC of the forward selection model is ~650, while for the model reported above it is ~500. This suggests that the addition of these variables does not actually make the model "better." This is rather curious, as the variables we selected earlier were arbitrary, whereas the forward selection model, with a low alpha to enter, included ALL variables.
+
+It makes sense that square footage of living space is the most significant variable since the larger the house, the more expensive it is. Our model analysis tells us that people tend to care about the size of the house more than the size of the property: again, logical for an urban area such as King County. Many of the most expensive houses have little yardage, as their location in the city is what drives the price. We intially thought square footage of living and square footage of lot might be highly correlated and thus one of them could be taken out, but this was not the case. It turns out that none of the variables we used in any of the models are particularly correlated, which saved us a headache.
+
+It is interesting that latitude is highly siginificant while longitude is not. King County is longer than it is wide (more latitude than longitude), and while the eastern longitudes are considerably wealthier than the western ones, the western ones are in the city center, driving up the price. The differences in latitude between the northern regions (commuters) and the southern regions (suburbia/more rural) are much more stark. 
+
+The factor variables such as waterfront, view, condition, and grade are unsuprisingly very important for prediction. The appraisal is a crucial factor in the eventual price of the property, so it makes sense that it counts as such.
+
+We now turn to confidence intervals at a particular X value. The value we predicted on was the median of all the variables in our model from farther above, corresponding to a property with a 1910 sq. ft. house, a latitude of 47.57 degrees, a view score of 0/5, and a condition score of 3/5. The model used to predict is the one from earlier (not forward selection)
+```{r, echo=FALSE}
+newdata = data.frame(sqft_living=median(housing2$sqft_living), 
+lat=median(housing2$lat), 
+view=median(housing2$view),
+condition = median(housing2$condition))
+
+newdata2 = data.frame(sqft_living=median(housing2$sqft_living), 
+lat=median(housing2$lat), 
+view=1,
+condition = median(housing2$condition))
+
+newdata3 = data.frame(sqft_living=median(housing2$sqft_living), 
+lat=median(housing2$lat), 
+view=4,
+condition = median(housing2$condition))
+```
+
+```{r, echo=FALSE}
+exp(predict(full.model, newdata, interval="confidence", level=.95))
+exp(predict(full.model, newdata, interval="predict", level=.95))
+```
+
+Note that the intervals had to be exponentiated to get the price they represent, since our model is on the natural logarithm of price. We can thus say that we are 95% confident that the true selling price of the mean property with the stated parameters is between 408384 and 428115 dollars, and that 95% of properties with these parameters will be listed between 235922 and 741071 dollars. 
+
+A point of interest is in the changing of the view variable. When the view is upgraded to 1, the prediction interval becomes (313254, 1029600): not a major change from when it's 0. However, when the view is 5, the prediction interval is (502022, 1653780), highlighting the effect of the interaction term with square footage of living space. 
+
+With that, we now summarize our report. We first built a model using 6 variables of interest: square footage of living space, condition of the house, view from the house, latitude, longitude, and square footage of the property. An intitial nested F-test led to the removal of squarefootage of property and longitude from the model. We included all pairwise interaction terms initially, then trimmed the ones which were not significant or intuitive. An F-test revealed that some of the interaction terms were significant. 
+
+Then, we ran a nested F-test against the significant variables and interaction terms, and found that the full model was still superior. This model consisted of the variables square footage of living space, latitude, view, condition, and interactions between square footage of living space and view, view and latitude, and square footage of living space and condition. Residual and diagnostic analysis revealed that this model was solid, and none of the outliers were particularly harmful for predictions. 
+
+Finally, we built another model using forward selection on all 19 variables in the dataset, and while this model was a better fit than any other, it was found to have reduced prediction power (based on BIC inferece). Thus, we used the "full model" from before to base our prediction and confidence intervals.
+
+We calculated a great many p-values (a huge amount in the forward selection procedure) totalling 532. While many of our fundamental results (nested F-tests) had p-values close to 0 and would not change, some of the criteria we used for selecting variables in the various models had p-values close to the .01 level, and multiplying them by 532 would in fact change the way we looked at those variables.
+
