@@ -31,8 +31,12 @@ ggpairs(housing2,
 columns = c("price", "sqft_living", "sqft_lot", "condition", "view", "bedrooms", "lat", "long"))
 
 # testing interaction
+
 inter.model <- lm(price ~ (sqft_living + sqft_lot + condition + view + lat + long)^2, data=housing2)
 no.inter.model <- lm(price ~ sqft_living + sqft_lot + condition + view + lat + long, data=housing2)
 anova(inter.model, no.inter.model)
+summary(inter.model)
+summary(no.inter.model)
 ```
 
+In order to figure out which variables are interacting, we compare the non-interacting model with the interacting model, and since sqft_lot is insignificant so the interaction terms that we keep are sqft_living:condition, sqft_living:view, sqft_living:lat and view:lat.   
