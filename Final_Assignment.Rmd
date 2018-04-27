@@ -22,4 +22,19 @@ set.seed(12897312)
 housing2 <- housing[sample(nrow(housing), 1000),]
 ```
 
+# Introduction
 
+# LASSO and RR
+
+# Splines and LOESS
+
+# Conclusion
+
+# Generalized Additive Models
+http://www.nrcse.washington.edu/NordicNetwork/GAMlecture.pdf
+
+# Lack of Fit (MLR)
+
+# Inverse Predictions
+
+# Summary
