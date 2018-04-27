@@ -1,0 +1,25 @@
+---
+title: "Final_Assignment"
+author: "Jacob Shore & Derek Huang"
+date: "April 26, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(fig.width = 3.5, fig.height = 3.5, echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(infer)
+library(skimr)
+library(broom)
+library(readr)
+options(digits=5)
+
+library(readr)
+kc_house_data <- read_csv("~/Downloads/kc_house_data.csv")
+housing <- kc_house_data
+set.seed(12897312)
+housing2 <- housing[sample(nrow(housing), 1000),]
+```
+
+
