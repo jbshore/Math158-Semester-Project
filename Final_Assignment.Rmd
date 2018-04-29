@@ -208,16 +208,104 @@ SSE.vec.lor[!is.na(SSE.vec.lor)]
 ```
 
 
-# Conclusion
+# Normal Probability Plots
+
+Perhaps the least talked-about technical assumption is normality of error terms. While slight deviations from normality usually do not pose issues, and the magic of the Central Limit Theorem suggests that even larger deviations from normality vanish under large sample sizes, normaly of error terms plays a major role in the theory underlying prediction intervals. In fact, the width of these intervals (specifically the multipliers) is a direct result of normal theory --- the lack of normality means we are lost when searching for the correct multiplier (assuming the distribution of errors is unknown). Thus, even if the regression fit is solid, it may be worthwhile to check normality of errors --- prediction intervals may not be as trustworthy as they seem. And in the realm of housing prices, prediction intervals are extremely important --- it is common for someone to want to know what the price range of houses is for a given set of predictors. For instance, a family which needs a house with 3 bedrooms, at Z latitude, and with W square feet of living space needs to have a price range to adequately compare to similar houses available in another location.
+
+The prevailing method for checking normality of errors is the normal probability plot, a special subtype of probability plot. In a normal probability plot (or qqplot), the residuals are plotted against their expected value under normality. That is, how likely a residual of that magnitude would be under the assumption that the residuals are normally distributed. The plot reads "quantiles," since this process implicitly compares the quantiles of the data (residuals) to the quantiles of a corresponding normal distribution (scaled by MSE). Thus, a plot that is linear suggests a normal distribution of errors, since each residual is nearly its expected value under the normality assumption. Furthermore, we can tell the exact manner in which the errors are distributed from this plot. For example, data which is skewed right would show up with a slope less than 1 for lower ordinal normal statistics (the x-axis) and greater than 1 for higher ordinal normal statistics. Data which has fat tails would show up at linear in the middle of the graph, but deviate to the bottom and top of the linear fit for low and high ordinal normal statistics, respectively. 
+
+The function which maps residuals to their expected value under normality has been found to be (k-.375/n+.25)*sqrt(MSE), where k is the kth smallest residual, and n is the total number of residuals. Since sqrt(MSE) is simply a scaling factor here, it may be omitted in the calculation without altering the shape of the plot. Let's move on to some examples for our data. As standardized residuals are simply another scaling factor, they to do not affect the nature of the plots, and we will use those as our input in the plots below.
+
+```{r, echo=FALSE}
+housing_lm <- lm(price ~ sqft_living, data=housing2)
+# untransformed model
+augment(housing_lm) %>%
+ggplot( aes(x=.fitted, y=.std.resid)) +
+geom_point() +
+geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot")
+qqnorm(housing_lm$residuals)
+```
+The above Q-Q plot is for the SLR model where price is predicted solely from square footage of living space. As shown by the non-linearity, normality of errors is not a great assumption to make here. The standardized residual plot shows many issues here on top of normality (it is severely heteroskedastic). In assignment 2, we used a power model (log transformation on both x and y) to get around these issues. Let's see what the Q-Q plot looks like in that arena.
+
+```{r, echo=FALSE}
+housing_lm3 <- lm(log(price) ~ log(sqft_living), data=housing2)
+# transforming both X and Y using log (power model)
+augment(housing_lm3) %>%
+ggplot( aes(x=.fitted, y=.std.resid)) +
+geom_point() +
+geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot")
+# power model residual
+qqnorm(housing_lm3$residuals)
+```
+Much better! The power model fixed the issues with the variance, but simultaneously fixed the issues with normality of errors. This is the model we'd move forward with in the SLR setting. Now let's check the final model we presented in the MLR setting, which regressed the log of price on square footage of living space, latitude, view, condition, and interactions between square footage of living space and view, view and latitude, and square footage of living space and condition.
+```{r, echo=FALSE, warning=FALSE}
+full.model <- lm(log(price) ~ (sqft_living + as.factor(condition) + as.factor(view) + lat + sqft_living*as.factor(condition) + sqft_living*as.factor(view) + as.factor(view)*lat), data=housing2)
+
+augment(full.model) %>%
+ggplot( aes(x=.fitted, y=.std.resid)) +
+geom_point() +
+geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot")
+
+qqnorm(full.model$residuals)
+```
+Again, there is nothing to worry about here. The Q-Q plot shows slight bias towards fat tails, but that's why we use the t-distribution anyways! We should note that we weren't expecting a major deviation from normality in an of these scenarios --- our sample size was large (1000) and the transformations made the linear model very appropriate.
+
+# Inverse Predictions
+
+Inverse predictions refer to the situation when a new value appears on the response, and this value is used to infer what the value(s) of the predictors are using the existing regression of Y on X. In the housing market, situtations like this arise all the time. It is not uncommon for potential buyers to browse by price (Y) only at first, and having a tool which can build out the details of the house would be very valuable (obviously this information would typically exist, but maybe the buyer is extremely lazy).
+
+Regression models are of course deterministic in nature, and so inverses are easy to come by. Note that the inverse prediction is NOT attained by regressing X on Y (called inverse regression), as this solves a different problem entirely (albeit with a similar result in most cases). The estimated regression function is assumed to be as always:
+
+Y_hat = b_0 + b_1*X
+
+If we solve this equation for X given Y_new, we get the form
+
+X_new_hat = (Y_new - b_0) / b_1
+
+which is the MLE for X_new assuming that there is a linear relationship between X and Y (b_1 cannot be 0). Assuming normality of errors and constant variance as before grants the confidence interval:
+
+X_new_hat ± t(1 - alpha/2; n-2)s{predX}
+
+where
+
+s{predX} = MSE / b_1^2 [1 + (1/n) + ((X_new_hat - X_bar)^2 / sum (X_i - X_bar)^2)
+
+And that's it. If we can safely conclude that beta_1 is NOT 0, then we are good to go with the inverse predictions. Note that the given interval above relies on normal theory --- an exact confidence interval may be obtained through some tedious algebra. It will not be reproduced here, but may be found at https://journal.r-project.org/archive/2014/RJ-2014-009/RJ-2014-009.pdf in the documentation for the "investr" package, which we will employ to get inversion intervals.
+
+Furthermore, in the case of multiple new observations, a Bonferroni or Scheffe procedure may be specified to adjust the critical values of the intervals accordingly. This will be illustrated below. 
+
+The model we will use is the same as above, where the log of price is regressed on the log of square footage of living space. The "investr" package was used to compute exact confidence intervals. This package automatically calculates the slope estimate, and performs a test of significance to make sure there is a linear relationship present. First, we will attempt to estimate what level of square footage of housing space led to a house listed for 500,000 dollars.
+
+```{r, warning=FALSE, echo=FALSE}
+library(investr)
+housing_lm3 <- lm(log(price) ~ log(sqft_living), data=housing2)
+res <- calibrate(housing_lm3, y0 = log(500000), interval = "inversion", level = 0.90)
+cat("A 95% CI for the square footage of living space of a home listed for 500,000 dollars in King County is (",exp(res$lower),",",exp(res$upper),") sq. ft.")
 
 
+ggplot(housing_pred, aes(x = exp(log.sqft_living.), y = exp(log.price.))) + geom_point(alpha = .5, col = 'black') +
+stat_smooth(method = "lm", se = FALSE) + geom_hline(yintercept =  500000, lty = 2)+geom_vline(xintercept = c(exp(res$lower), exp(res$estimate), exp(res$upper)), lty = 2)+xlim(0,6000)+labs(x = "Square Footage of Living Space", y = "Price")
+```
+
+In the plot above, the shaded area represents the confidence interval around the fit of the regression function, while the dashed lines represent the new observation, the best guess for what value of square footage of living space corresponds to a 500,000 dollar house, and the inversion intervals for that guess at 90% confidence. Recall that the regression model was fit on the log of both predictor and response, so they have been back-transformed here.
+
+```{r, echo=FALSE, warning=FALSE}
+res2 <- calibrate(housing_lm3, y0 = log(500000), interval = "inversion", level = 0.90, adjust = "Scheffe", k = 5)
+res3 <- calibrate(housing_lm3, y0 = log(500000), interval = "inversion", level = 0.90, adjust = "Bonferroni", k = 5)
+
+ggplot(housing_pred, aes(x = exp(log.sqft_living.), y = exp(log.price.))) + geom_point(alpha = .5, col = 'black') +
+stat_smooth(method = "lm", se = FALSE)+geom_hline(yintercept =  500000, lty = 2)+xlim(0,9000)+labs(x = "Square Footage of Living Space", y = "Price")+geom_vline(xintercept = c(exp(res2$lower), exp(res2$estimate), exp(res2$upper)), lty = 2, col="blue")+geom_vline(xintercept = c(exp(res3$lower), exp(res3$estimate), exp(res3$upper)), lty = 2, col = "red")+geom_vline(xintercept = c(exp(res$lower), exp(res$estimate), exp(res$upper)), lty = 2)
+```
+
+The above plot shows simultaneous inference for 5 new houses that entered the market at 500,000. In red are the Scheffe bounds, and in blue are the Bonferroni bounds for the inversion intervals. Note that all intervals here are big --- perhaps too big? We cannot determine if there is an error somewhere within the package or if the inversion intervals for simultaneous inference really are that large. Either way, nobody is going to be getting any information out of knowing that a house listed for 500,000 dollars is between 1000 and 45000 square feet.
 
 # Generalized Additive Models
 http://www.nrcse.washington.edu/NordicNetwork/GAMlecture.pdf
 ```{r}
 library(mgcv)
+require(gam)
 
-gam1=gam(price ~ ns(sqft_living,4)+ns(lat,5),data=housing)
+gam1=gam(price ~ s(sqft_living,4)+s(lat,5),data=housing2)
 #gam2=gam(price ~ s(sqft_living,4)+s(lat,5),data=housing)
 summary(gam1)
 #plot(gam1)
@@ -225,9 +313,5 @@ par(mfrow=c(1,3))
 plot.gam(gam1, se=TRUE,col="blue")
 
 ```
-
-# Lack of Fit (MLR)
-
-# Inverse Predictions
 
 # Summary
