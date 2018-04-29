@@ -309,8 +309,8 @@ gam1=gam(price ~ s(sqft_living,4)+s(lat,5),data=housing2)
 #gam2=gam(price ~ s(sqft_living,4)+s(lat,5),data=housing)
 summary(gam1)
 #plot(gam1)
-par(mfrow=c(1,3))
-plot.gam(gam1, se=TRUE,col="blue")
+par(mfrow=c(1,2))
+plot(gam1, se=TRUE,col="black")
 
 ```
 
