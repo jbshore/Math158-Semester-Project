@@ -25,10 +25,27 @@ housing2$zipcode <- as.factor(housing2$zipcode)
 ```
 
 # Introduction
-Our dataset describes over 21,000 homes sold between May 2014 and May 2015 in King County, WA (Seattle area). The dataset consists of 19 variables: price, the number of bedrooms/bathrooms, the size of the house/parking lot/basement, the number of floors, whether waterfront or not, overall condition/grade, built year, renovation year, zip code and latitude/longitude coordinate. We have randomly selected 1,000 of the 21,613 observations to be included in our model analysis.
+In this study, we wish to analyze which factors best predict housing prices in King County (Seattle), WA. Our dataset describes over 21,000 homes sold between May 2014 and May 2015 in King County, so we anticipate the results are applicable to 2018 prices, as the economy has not shifted that much since 2015. The dataset consists of 19 variables: price, the number of bedrooms/bathrooms, the size of the house/parking lot/basement, the number of floors, whether waterfront or not, overall condition/grade, built year, renovation year, zip code and latitude/longitude coordinate. The data was taken from Kaggle, published by author "harlfoxem" under the title "House Sales in King County, WA." It is a well-known dataset on kaggle for performing regression analysis, but from what we can tell, our study is by far the most thorough.
 
-We are most interested in the relationship between price (response vairable) and the following explanatory variables: square footage of living space, square footage of property, condition, view, longitude, and latitude because these are the variables that intutively seem like they should most affect the price.
+Our primary task is to examine the relationship between price (response variable) and the various explanatory variables to see which are the most predictive. Some of the variables that we anticipated to be important predictors were square footage of living space, square footage of property, condition, view, longitude, and latitude (we were right on some of these!), since these are the variables that intutively seem like they should most affect the price. We have randomly selected 1,000 of the 21,613 observations to be included in our model analysis, as this sample size is enough to generalize to the full population, makes plotting results cleaner, and eases computational load.
+ 
+The variabes will be occasionally referred to as follows in R output (note that some of them are factor variables with multiple levels):
+sqft_living: the size of the house by square footage
+sqft_lot: the size of the property by square footage
+condition: appraiser's report on condition of the property, scale 1-5
+view: appraiser's report on how nice the view is, scale 0-4
+long: longitude of the house in degrees
+lat: latitude of the house in degrees
+bedrooms: number of bedrooms
+bathrooms: number of bathrooms
+waterfront: binary variable if the house is on the waterfront
+grade: appraiser's report on grade of the house, King Co. specific
+sqft_above: square footage of the attic (if applicable)
+sqft_basement: square footage of the basement (if applicable)
+yr_built: the year the house was constructed
+zipcode: the zipcode of the property
 
+Let us now review what we have accomplished so far. In the first assingment, we described our data in greater depth and gave summary statistics on some of the interesting variables. In the second assingment, we focused on the SLR model regressing price on square footage of living space, which we had a hunch would be the most interesting and best candidate for a linear model. Our procedure, including the eventual transformations of the variables, can be found in those notes. Moving on to MLR, we first determined that multicollinearity between variables was not a concern (see pairs plot from assingment 3). We then fit multiple models using many different procedures, testing for interaction, forward/backward selection methods, and BIC selection criteria to name a few. The results of this analysis can be found in those notes, and will be brought up again as we move forward with this summary.
 
 # LASSO and RR
 
@@ -299,21 +316,21 @@ Inverse predictions refer to the situation when a new value appears on the respo
 
 Regression models are of course deterministic in nature, and so inverses are easy to come by. Note that the inverse prediction is NOT attained by regressing X on Y (called inverse regression), as this solves a different problem entirely (albeit with a similar result in most cases). The estimated regression function is assumed to be as always:
 
-Y_hat = b_0 + b_1*X
+$\hat{Y} = b_0 + b_1*X$
 
 If we solve this equation for X given Y_new, we get the form
 
-X_new_hat = (Y_new - b_0) / b_1
+$\hat{X}_{new} = \frac{(Y_{new} - b_0)}{b_1}$
 
-which is the MLE for X_new assuming that there is a linear relationship between X and Y (b_1 cannot be 0). Assuming normality of errors and constant variance as before grants the confidence interval:
+which is the MLE for $X_{new}$ assuming that there is a linear relationship between X and Y ($b_1$ cannot be 0). Assuming normality of errors and constant variance as before grants the confidence interval:
 
-X_new_hat ± t(1 - alpha/2; n-2)s{predX}
+$\hat{X}_{new} \pm t(1 - \frac{\alpha}{2}; n-2)s\{predX\}$
 
 where
 
-s{predX} = MSE / b_1^2 [1 + (1/n) + ((X_new_hat - X_bar)^2 / sum (X_i - X_bar)^2)
+$s\{predX\} = \frac{MSE}{b_1^2} [1 + \frac{1}{n} + (\frac{(\hat{X}_{new} - \bar{X})^2}{\sum (X_i - \bar{X})^2})$
 
-And that's it. If we can safely conclude that beta_1 is NOT 0, then we are good to go with the inverse predictions. Note that the given interval above relies on normal theory --- an exact confidence interval may be obtained through some tedious algebra. It will not be reproduced here, but may be found at https://journal.r-project.org/archive/2014/RJ-2014-009/RJ-2014-009.pdf in the documentation for the "investr" package, which we will employ to get inversion intervals.
+And that's it. If we can safely conclude that $\beta_1$ is NOT 0, then we are good to go with the inverse predictions. Note that the given interval above relies on normal theory --- an exact confidence interval may be obtained through some tedious algebra. It will not be reproduced here, but may be found at https://journal.r-project.org/archive/2014/RJ-2014-009/RJ-2014-009.pdf in the documentation for the "investr" package, which we will employ to get inversion intervals.
 
 Furthermore, in the case of multiple new observations, a Bonferroni or Scheffe procedure may be specified to adjust the critical values of the intervals accordingly. This will be illustrated below. 
 
@@ -343,7 +360,7 @@ stat_smooth(method = "lm", se = FALSE)+geom_hline(yintercept =  500000, lty = 2)
 The above plot shows simultaneous inference for 5 new houses that entered the market at 500,000. In red are the Scheffe bounds, and in blue are the Bonferroni bounds for the inversion intervals. Note that all intervals here are big --- perhaps too big? We cannot determine if there is an error somewhere within the package or if the inversion intervals for simultaneous inference really are that large. Either way, nobody is going to be getting any information out of knowing that a house listed for 500,000 dollars is between 1000 and 45000 square feet.
 
 # Generalized Additive Models
-GAMs provide a general framework for extending a standard linear model by allowing non-linear functions of each of the variables, while maintaining additivity. And GAMs can be applied with both quantitative and qualitative responses.
+GAMs provide a general framework for extending a standard linear model by allowing non-linear functions of each of the variables, while maintaining additivity. GAMs are extraordinarily flexible, as they can be applied with both quantitative and qualitative responses.
 
 An example of GAM would be, instead of having $y_i = \beta_0 + \beta_1 x_{i1}+ \beta_2x_{i2} + ... \beta_p x_{ip} + \epsilon_i$, we would write the model as  $y_i = \beta_0 + f_1(x_{i1})+ f_2(x_{i2}) + .... f_p(x_{ip}) + \epsilon_i$. It shows the addictive characteristic because we calculate a separate $f_j$ for each $X_j$, and then add together all of their contributions.
 
@@ -382,3 +399,15 @@ As we can see, there is a positive relationship between square feet living/price
 From the f-test we find that there is compelling evidence that a GAM with a non-linear function of latitude is better than a GAM with a linear function of latitude or one that does not latitude at all (p-value ~ 0). And this confirms our conjecture that non-linear fits could be better for latitude.
 
 # Summary
+
+In this study, we examined which factors best predict housing prices in King County (Seattle), WA. At the beginning of the experiment, we were confident in being able to fit a linear model well, as it is well-known that housing prices are affected by some of the variables we had access to (such as square footage of living space, number of bedrooms, etc.). One aspect of the pricing dynamics that we hoped to uncover was whether objective (square footage, rooms, location) or subjective (appraisal scores on condition, view) carried more weight in the model. As it turns out, square footage of living space is unsurprisingly the strongest predictor, as it had a near perfect linear fit with the log of price, it was the most significant predictor in the MLR setting, and it was consistently the first variable in the model in forward / backward selection methods. Some of the appraisal scores were also very significant predictors --- specifically the view rating and condition rating. Surprisingly, latitude ended up being a very significant predictor across all of the model types we analyzed, while longitude was not. Perhaps even more surprisingly, predictors which we thought might be important, such as square footage of property and appraisal ratings on grade and objective measures such as number of bathrooms and bedrooms were not as relevant as the variables listed previously. That is not to say they didn't have predictive power --- they did, but the other variables were so noteworthy that adding in these additional variables was not worth the marginal benefit at the risk of overfitting. 
+
+As stated above, shrinkage and smoothing models did not provide any new insight in terms of model building, and confirmed our hunch that the final MLR model we constructed in assignment 3 was the best for our situation. Our data was staunchly linear across many of the variables,
+
+We started by doing ....
+
+Final model on X varaibles, p-val, R2, other stuff. ANOVA test... interaction WAS sig. Coef estimates. Reasons for the variables in this model.
+
+shrinkage and smoothing models did not provide anything interesting, and confirmed why we did MLR
+
+Housing prices change RAPIDLY, and vary across cities.
