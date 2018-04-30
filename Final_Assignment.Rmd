@@ -396,7 +396,6 @@ Like ridge regression or LASSO, much of the power in GAMs lies in their ability 
 First, let's go through a quick example to see how GAM works. We will fit a GAM for regressing price on square footage of living space, latitude, and condition (which is a 5-factor variable). Note that we specify a lot here --- we are fitting cubic regression splines on 10 knots for the first two variables, and on 5 knots (the maximum) for the third variable, and we set $\lambda$ to .5. The code is left in here as an example of the "mgcv" package, which we are using for our GAMs.
 ```{r, echo=TRUE, warning=FALSE, message=FALSE}
 library(mgcv)
-# fit the model using natural splines
 gam1= mgcv::gam(price ~ s(sqft_living,bs="cr", sp=.5)+s(lat,bs="cr",sp=.5)+s(condition, bs="cr",k=5,sp=.5), data=housing2)
 par(mfrow=c(1,3))
 plot(gam1, se=TRUE,col="black")
