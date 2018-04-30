@@ -2,7 +2,9 @@
 title: "Final_Assignment"
 author: "Jacob Shore & Derek Huang"
 date: "April 26, 2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE, echo=FALSE}
@@ -51,7 +53,7 @@ Let us now review what we have accomplished so far. In the first assingment, we 
 
 As a reminder, the final model from assignment 3 regressed the log of price on square footage of living space, latitude, view, condition, and interactions between square footage of living space and view, view and latitude, and square footage of living space and condition. This model will now be compared to the models from ridge regression and LASSO
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Ridge Regression
 require(ISLR); require(glmnet)
 set.seed(232352)
@@ -83,8 +85,8 @@ ridge.coefs <- coef(housing.ridge)[,min.index]
 ridge.coefs <- ridge.coefs[-1]
 plot(ridge.coefs)
 ```
-$\lambda$ was cross validated and the value that minimized cv error was found to be 10701, as shown in the first plot above (in log scale). The second plot shows the shrinkage of the coefficients as $\lambda$ increases. Finally, the third plot shows the coefficients of the 15 predictor variables under the value of $\lambda$ which minimized cv error. These coefficients are radically different --- the OLS model was very robust and involved a large number of variables, since there was interaction between continuous and factor variables. As such, a direct comparison of coefficients is difficult, although the positive and negative ones are preserved between the mdoels. We can say that ridge regression really elevated waterfront and longitude (at leasy didn't shrink these coefficients as much), and while latitude made it into the final OLS model, waterfront did not. We were also surprised that square footage of living space was shrunk so much in the ridge regression setting, as numerous OLS methods presented this variable as the most important! On to LASSO
 
+$\lambda$ was cross validated and the value that minimized cv error was found to be 10701, as shown in the first plot above (in log scale). The second plot shows the shrinkage of the coefficients as $\lambda$ increases. Finally, the third plot shows the coefficients of the 15 predictor variables under the value of $\lambda$ which minimized cv error. These coefficients are radically different --- the OLS model was very robust and involved a large number of variables, since there was interaction between continuous and factor variables. As such, a direct comparison of coefficients is difficult, although the positive and negative ones are preserved between the mdoels. We can say that ridge regression really elevated waterfront and longitude (at leasy didn't shrink these coefficients as much), and while latitude made it into the final OLS model, waterfront did not. We were also surprised that square footage of living space was shrunk so much in the ridge regression setting, as numerous OLS methods presented this variable as the most important! On to LASSO.
 
 ```{r, echo=FALSE, warning=FALSE}
 # LASSO
@@ -114,7 +116,7 @@ $\lambda$ was cross validated and the value that minimized cv error was found to
 
 Below, a pairs plot is presented for the three sets of coefficients. NOTE: a linear model was run on the full variable set in OLS, and this is NOT the same model as was compared above. Rather, the OLS model in the comparisons below contains no interaction terms, and is just the full explanatory variable set to match with RR/LASSO.
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 full.model <- lm(log(price) ~ (sqft_living + as.factor(condition) + as.factor(view) + lat + sqft_living*as.factor(condition) + sqft_living*as.factor(view) + as.factor(view)*lat), data=housing2)
 
 lin.mod <- lm(price ~., data=housing2)
@@ -130,7 +132,7 @@ columns = c("ols.coefs", "ridge.coefs", "lasso.coefs"))
 
 The pairs plot shows near identical selection of variables and coefficient values from RR and LASSO, while there is seemingly no correlation whatsoever with the OLS coefficients. These models are very, very different indeed.
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 require(scales)
 lasso.pred <-predict(housing.lasso, housing.lasso.cv$lambda.min, newx = data.matrix(housing2.RR), type="response")
 
@@ -145,7 +147,7 @@ plot(housing2$price, ols.pred, pch=16, col = alpha("black", .5), xlab = "Observe
 points(housing2$price, ols.pred.bad, pch=16, col = alpha("orange", .2))
 points(housing2$price, RR.pred, pch=16, col = alpha("red", .2))
 points(housing2$price, lasso.pred, pch=16, col = alpha("blue",.2))
-legend(2100000,1100000,c("OLS(final)", "OLS(full)", "Ridge Reg.", "LASSO"), lty=c(1,1,1,1), lwd=c(2.5,2.5,2.5,2.5),col=c("black", "orange", "red", "blue"), cex = .62)
+legend(1700000,1100000,c("OLS(final)", "OLS(full)", "Ridge Reg.", "LASSO"), lty=c(1,1,1,1), lwd=c(2.5,2.5,2.5,2.5),col=c("black", "orange", "red", "blue"), cex = .62)
 
 plot(housing2$price, ols.pred, pch=16, col = alpha("black", .5), xlab = "Observed", ylab = "Predicted", xlim = c(0,1000000), ylim = c(0,1000000))
 points(housing2$price, ols.pred.bad, pch=16, col = alpha("orange", .2))
@@ -157,7 +159,7 @@ The above plots show the observed values of price on the x-axis, and the predict
 
 # Splines and LOESS
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Splines
 require(splines)
 
@@ -184,7 +186,7 @@ for(i in knots){
   color = color+1
   lines(sqft_living.grid, var.pred$fit, lwd=2, col =color)
 }
-legend(6000,2000000,c(3,5,10,40), lty=c(1,1), lwd=c(2.5,2.5),col=c(1,2,3,4), title = "# Knots")
+legend(6000,2000000,c(3,5,10,40), lty=c(1,1), lwd=c(2.5,2.5),col=c(1,2,3,4), title = "# Knots", cex = .52)
 ```
 
 ```{r, echo=FALSE, warning=FALSE}
@@ -207,7 +209,7 @@ price.lor.pred <- predict(price.lor, newdata = data.frame(sqft_living=sqft_livin
 color=color+1
 lines(sqft_living.grid, price.lor.pred$fit ,lwd =2, col =color)
 }
-legend(6000,2000000,c(.1,.3,.6,.9), lty=c(1,1), lwd=c(2.5,2.5),col=c(1,2,3,4), title = "Span")
+legend(6000,2000000,c(.1,.3,.6,.9), lty=c(1,1), lwd=c(2.5,2.5),col=c(1,2,3,4), title = "Span", cex = .52)
 
 
 # CV is .9
@@ -240,7 +242,7 @@ for(i in knots){
   color = color+1
   lines(lat.grid, var.pred$fit, lwd=2, col =color)
 }
-legend(47.2,3000000,c(3,5,10,40), lty=c(1,1), lwd=c(2.5,2.5),col=c(1,2,3,4), title = "# Knots")
+legend(47.2,3000000,c(3,5,10,40), lty=c(1,1), lwd=c(2.5,2.5),col=c(1,2,3,4), title = "# Knots", cex=.65)
 ```
 
 ```{r, echo=FALSE, warning=FALSE}
@@ -263,7 +265,7 @@ price.lor.pred <- predict(price.lor, newdata = data.frame(lat=lat.grid), se=TRUE
 color=color+1
 lines(lat.grid, price.lor.pred$fit ,lwd =2, col =color)
 }
-legend(47.2,3000000,c(.1,.3,.6,.9), lty=c(1,1), lwd=c(2.5,2.5),col=c(1,2,3,4), title = "Span")
+legend(47.2,3000000,c(.1,.3,.6,.9), lty=c(1,1), lwd=c(2.5,2.5),col=c(1,2,3,4), title = "Span",cex=.5)
 ```
 
 Again, both styles provide some good fits in the middle ranges of their respective parameters to a relationship which is clearly non-linear (the downtown area has a spike in prices). We give a slight edge to LOESS in this case (on a span of .3) for very nice smoothness and easy interpretability. The behavior towards the fringes of the latitude range is particularly better in the LOESS model. Also, we cheated and cross-validated, and this model had the lowest cv error (we would have picked it anyways!). All in all, none of these models would suggest a strong relationship between latitude and price, of any form. 
@@ -299,7 +301,9 @@ geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Stan
 # power model residual
 qqnorm(housing_lm3$residuals)
 ```
-Much better! The power model fixed the issues with the variance, but simultaneously fixed the issues with normality of errors. This is the model we'd move forward with in the SLR setting. Now let's check the final model we presented in the MLR setting, which regressed the log of price on square footage of living space, latitude, view, condition, and interactions between square footage of living space and view, view and latitude, and square footage of living space and condition.
+
+Much better! The power model fixed the issues with the variance and simultaneously fixed the issues with normality of errors. This is the model we'd move forward with in the SLR setting. Now let's check the final model we presented in the MLR setting, which regressed the log of price on square footage of living space, latitude, view, condition, and some interactions as described above.
+
 ```{r, echo=FALSE, warning=FALSE}
 full.model <- lm(log(price) ~ (sqft_living + as.factor(condition) + as.factor(view) + lat + sqft_living*as.factor(condition) + sqft_living*as.factor(view) + as.factor(view)*lat), data=housing2)
 
@@ -310,6 +314,7 @@ geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Stan
 
 qqnorm(full.model$residuals)
 ```
+
 Again, there is nothing to worry about here. The Q-Q plot shows slight bias towards fat tails, but that's why we use the t-distribution anyways! We should note that we weren't expecting a major deviation from normality in an of these scenarios --- our sample size was large (1000) and the transformations made the linear model very appropriate.
 
 # Inverse Predictions
@@ -342,10 +347,23 @@ The model we will use is the same as above, where the log of price is regressed 
 library(investr)
 housing_lm3 <- lm(log(price) ~ log(sqft_living), data=housing2)
 res <- calibrate(housing_lm3, y0 = log(500000), interval = "inversion", level = 0.90)
-cat("A 95% CI for the square footage of living space of a home listed for 500,000 dollars in King County is (",exp(res$lower),",",exp(res$upper),") sq. ft.")
+cat("A 95% CI for the square footage of living space of a home listed for 500,000 dollars in
+King County is (",exp(res$lower),",",exp(res$upper),") sq. ft.")
 ```
 
 ```{r, warning=FALSE, echo=FALSE}
+housing_lm3 <- lm(log(price) ~ log(sqft_living), data=housing2)
+crit_val <- qt(.975, glance(housing_lm3)$df.resid)
+housing_gl <- broom::glance(housing_lm3)
+housing_sig <- dplyr::pull(housing_gl, sigma)
+
+housing_pred <- broom::augment(housing_lm3) %>%
+mutate(.se.pred = sqrt(housing_sig^2 + .se.fit^2)) %>%
+mutate(lower_PI = .fitted - crit_val*.se.pred,
+upper_PI = .fitted + crit_val*.se.pred,
+lower_CI = .fitted - crit_val * .se.fit,
+upper_CI = .fitted + crit_val * .se.fit)
+
 ggplot(housing_pred, aes(x = exp(log.sqft_living.), y = exp(log.price.))) + geom_point(alpha = .5, col = 'black') +
 stat_smooth(method = "lm", se = FALSE) + geom_hline(yintercept =  500000, lty = 2)+geom_vline(xintercept = c(exp(res$lower), exp(res$estimate), exp(res$upper)), lty = 2)+xlim(0,6000)+labs(x = "Square Footage of Living Space", y = "Price")
 ```
@@ -376,7 +394,7 @@ We picked GAMs because GAMs allow us to fit a non-linear $f_j$ to each $X_j$, so
 Like ridge regression or LASSO, much of the power in GAMs lies in their ability to do the work for us, as we do not need to assume what sort of functions fit each predictor variable and the response. These non-linear fits can potentially make more accurate predictions. For example, for latitude, we anticipate GAMs to yield better fit for us. Also, since the model is additive, we can still examine the effect of each $X_j$ on $Y$ individually while holding all of the other variables fixed. Hence if we are interested in inference, GAMs provide a useful representation, and are easily interpretable in non-technical terms (pricing increases linearly with square footage of living space, and increases initially with latitude before tailing off). It also makes the interpretation of factor variables much clearer, as the relationship between the different factors and the response can be visualized.
 
 First, let's go through a quick example to see how GAM works. We will fit a GAM for regressing price on square footage of living space, latitude, and condition (which is a 5-factor variable). Note that we specify a lot here --- we are fitting cubic regression splines on 10 knots for the first two variables, and on 5 knots (the maximum) for the third variable, and we set $\lambda$ to .5. The code is left in here as an example of the "mgcv" package, which we are using for our GAMs.
-```{r, echo=TRUE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 library(mgcv)
 # fit the model using natural splines
 gam1= mgcv::gam(price ~ s(sqft_living,bs="cr", sp=.5)+s(lat,bs="cr",sp=.5)+s(condition, bs="cr",k=5,sp=.5), data=housing2)
@@ -392,6 +410,7 @@ gam2= mgcv::gam(price ~ s(sqft_living,bs="cr")+s(lat,bs="cr")+s(condition, bs="c
 par(mfrow=c(1,3))
 plot(gam2, se=TRUE,col="black")
 ```
+
 Now it's much more smoothed, and the result lines up with what we've seen from prior assingments. Let's add more variables in and see what happens. Note that model selection never actually worked for us --- it just returned all inputted variables no matter what we tried. Also note that the binary variable "waterfront" we could not get to work, as it is below the minimum number of knots required. There is a way around this, but not in conjunction with continuous variables from what we can tell.
 
 ```{r, echo=FALSE, warning=FALSE}
@@ -421,17 +440,17 @@ In this study, we examined which factors best predict housing prices in King Cou
 
 As stated above, shrinkage and smoothing models did not provide any new insight in terms of model building, and confirmed our hunch that the final MLR model we constructed in assignment 3 was the best for our situation. Our data was staunchly linear between square footage of living space and price, but with significant interaction effects. As the GAM model showed, many of the other variables were not linear with price in the slightest. The major advantage of the MLR model ended up being these interactions effects, or so it seems. 
 
-To recap, the final OLS model regressed the log of price on square footage of living space, latitude, view, condition, and interactions between square footage of living space and view, view and latitude, and square footage of living space and condition. This model was selected as follows: After some initial digging to find the most significant predictors (t-statistics), an F-test was run to see if these variables (square footage of living space, view, latitude, condition) had significant interaction terms. The resulting p-value of ~0 implied that interaction was significant. We decided to keep the interaction terms with the largest marginal t-statistics, even if they were single-factor interaction (e.g. we kept the interaction of view and latitude even though only three levels of view significantly interacted with latitude). $R^2$ ajusted for this model was .711, meaning that approximately 71.1% of the variance in the log of price can be explained by a linear relationship with the above listed explanatory variables. The value of the coefficients can be found below, as well as the residual plot. 
+To recap, the final OLS model regressed the log of price on square footage of living space, latitude, view, condition, and interactions between square footage of living space and view, view and latitude, and square footage of living space and condition. This model was selected as follows: After some initial digging to find the most significant predictors (t-statistics), an F-test was run to see if these variables (square footage of living space, view, latitude, condition) had significant interaction terms. The resulting p-value of ~0 implied that interaction was significant. We decided to keep the interaction terms with the largest marginal t-statistics, even if they were single-factor interaction (e.g. we kept the interaction of view and latitude even though only three levels of view significantly interacted with latitude). $R^2$ ajusted for this model was .711, meaning that approximately 71.1% of the variance in the log of price can be explained by a linear relationship with the above listed explanatory variables. The value of the coefficients can be found below, as well as the residual plot. Pardon the clutter, but our model is fairly complex with the factor variables. As shown in the coefficient plot below, many of them are close to 0, which explains why LASSO did not shrink many of them (it physically couldn't!).
 
 ```{r, echo=FALSE, warning=FALSE}
 full.model$coefficients
+
+plot(full.model$coefficients, ylab = "Coeff. Value")
 
 augment(full.model) %>%
 ggplot( aes(x=.fitted, y=.std.resid)) +
 geom_point() +
 geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot")
-
-data.frame(summary(full.model)$coef[summary(full.model)$coef[,4] <= .05, 4])
 ```
 
 The following variables were significant at the .05 level, with their corresponding p-values.
