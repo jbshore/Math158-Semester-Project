@@ -115,6 +115,8 @@ $\lambda$ was cross validated and the value that minimized cv error was found to
 Below, a pairs plot is presented for the three sets of coefficients. NOTE: a linear model was run on the full variable set in OLS, and this is NOT the same model as was compared above. Rather, the OLS model in the comparisons below contains no interaction terms, and is just the full explanatory variable set to match with RR/LASSO.
 
 ```{r, echo=FALSE, warning=FALSE}
+full.model <- lm(log(price) ~ (sqft_living + as.factor(condition) + as.factor(view) + lat + sqft_living*as.factor(condition) + sqft_living*as.factor(view) + as.factor(view)*lat), data=housing2)
+
 lin.mod <- lm(price ~., data=housing2)
 ols.coefs <- lin.mod$coefficients
 ols.coefs <- ols.coefs[-1]
@@ -419,12 +421,27 @@ In this study, we examined which factors best predict housing prices in King Cou
 
 As stated above, shrinkage and smoothing models did not provide any new insight in terms of model building, and confirmed our hunch that the final MLR model we constructed in assignment 3 was the best for our situation. Our data was staunchly linear between square footage of living space and price, but with significant interaction effects. As the GAM model showed, many of the other variables were not linear with price in the slightest. The major advantage of the MLR model ended up being these interactions effects, or so it seems. 
 
-To recap, the final model regressed the log of price on square footage of living space, latitude, view, condition, and interactions between square footage of living space and view, view and latitude, and square footage of living space and condition. $R^2$ was .717, meaning that approximately 71.1% of the variance in the log of price can be explained by a linear relationship with the above listed explanatory variables. 
+To recap, the final OLS model regressed the log of price on square footage of living space, latitude, view, condition, and interactions between square footage of living space and view, view and latitude, and square footage of living space and condition. This model was selected as follows: After some initial digging to find the most significant predictors (t-statistics), an F-test was run to see if these variables (square footage of living space, view, latitude, condition) had significant interaction terms. The resulting p-value of ~0 implied that interaction was significant. We decided to keep the interaction terms with the largest marginal t-statistics, even if they were single-factor interaction (e.g. we kept the interaction of view and latitude even though only three levels of view significantly interacted with latitude). $R^2$ ajusted for this model was .711, meaning that approximately 71.1% of the variance in the log of price can be explained by a linear relationship with the above listed explanatory variables. The value of the coefficients can be found below, as well as the residual plot. 
 
-Residual plots...
+```{r, echo=FALSE, warning=FALSE}
+full.model$coefficients
 
-Our results generalize to...
+augment(full.model) %>%
+ggplot( aes(x=.fitted, y=.std.resid)) +
+geom_point() +
+geom_hline(yintercept = 0) + labs(x = "Fitted", y = "Std. Resid.", title = "Standardized Residual Plot")
 
-Final model on X varaibles, p-val, R2, other stuff. ANOVA test... interaction WAS sig. Coef estimates. Reasons for the variables in this model.
+data.frame(summary(full.model)$coef[summary(full.model)$coef[,4] <= .05, 4])
+```
 
-Housing prices change RAPIDLY, and vary across cities.
+The following variables were significant at the .05 level, with their corresponding p-values.
+
+```{r, echo=FALSE}
+data.frame(summary(full.model)$coef[summary(full.model)$coef[,4] <= .05, 4])
+```
+
+As for why this model in particular worked well, it is clearly due to the interaction effects, which played a major role in the final predictions. Housing prices are affected by a great many factors beyond simply square footage of living space, and these variables interact in interesting ways. For instance, our model shows that houses with fantastic views (4 on the scale) go for far, far more than houses with mediocre view (2 or 3 on the scale) when latitude is taken into account. This naturally makes sense, as views in downtown Seattle will not be relatively scored the same by appraiser's as views outside of the city center. Square footage of housing also interacts with things like condition --- a house in poor condition might still be listed for a lot of money, since the condition is easier to "fix" than square footage is.
+
+We caution against generalizing our results beyond King County housing. While many of these factors no doubt predict housing across the country (or world), others may be Seattle specific. Latitude and longitude are two obvious ones, but things like the interaction between view and square footage may not hold true in other settings. Even though the data was collected three years ago, and housing prices change pretty rapidly, we do feel comfortable generalizing these results to the current Seattle market. It was stated somewhere above, but we really would like to examine demographic changes in Seattle and how these affect the housing prices (race, age, religion), as Seattle is changing very quickly on that front. We'd also like to do more spatial modeling with this dataset, perhaps out of the regression arena, and utilize the zipcode variable in conjunction with demographic data to perform spatial statistical analyses.
+
+Overall, this project was very interesting for us. While it sort of felt like a pre-prepared dataset (and this dataset is in fact commonly used for introductory regression analyses), it was fun to apply what we've done in class to real-world data. Jacob is moving to Seattle very shortly for work as well, so it's nice to get an idea about how prices in Seattle are figured. We were also glad to find out that our best fit was not the simplest solution (just using square footage of living space), but that the interaction effects were significant and relevant. 
